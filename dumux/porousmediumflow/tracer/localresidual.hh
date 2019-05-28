@@ -79,6 +79,12 @@ public:
     {
         NumEqVector storage(0.0);
 
+        // regularize saturation so we don't get singular matrices when the saturation is zero
+        // note that the fluxes will still be zero (zero effective diffusion coefficient),
+        // and we still solve the equation storage = 0 yielding the correct result
+        using std::max;
+        const Scalar saturation = max(1e-8, volVars.saturation(phaseIdx));
+
         // formulation with mole balances
         if (useMoles)
         {
@@ -86,7 +92,7 @@ public:
                 storage[compIdx] += volVars.porosity()
                                     * volVars.molarDensity(phaseIdx)
                                     * volVars.moleFraction(phaseIdx, compIdx)
-                                    * volVars.saturation(phaseIdx);
+                                    * saturation;
         }
         // formulation with mass balances
         else
@@ -95,8 +101,7 @@ public:
                 storage[compIdx] += volVars.porosity()
                                     * volVars.density(phaseIdx)
                                     * volVars.massFraction(phaseIdx, compIdx)
-                                    * volVars.saturation(phaseIdx);
-
+                                    * saturation;
         }
 
         return storage;
@@ -178,9 +183,15 @@ public:
                                const VolumeVariables& curVolVars,
                                const SubControlVolume& scv) const
     {
+        // regularize saturation so we don't get singular matrices when the saturation is zero
+        // note that the fluxes will still be zero (zero effective diffusion coefficient),
+        // and we still solve the equation storage = 0 yielding the correct result
+        using std::max;
+        const auto saturation = max(1e-8, curVolVars.saturation(phaseIdx));
+
         const auto porosity = curVolVars.porosity();
         const auto rho = useMoles ? curVolVars.molarDensity() : curVolVars.density();
-        const auto d_storage = scv.volume()*porosity*rho/this->timeLoop().timeStepSize();
+        const auto d_storage = scv.volume()*porosity*rho*saturation/this->timeLoop().timeStepSize();
 
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
             partialDerivatives[compIdx][compIdx] += d_storage;
