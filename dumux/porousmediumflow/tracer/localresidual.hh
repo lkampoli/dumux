@@ -258,7 +258,8 @@ public:
                                             : rhoMolar*fluxCache.diffusionTij(phaseIdx, compIdx)*FluidSystem::molarMass(compIdx);
 
             derivativeMatrices[scvf.insideScvIdx()][compIdx][compIdx] += (advDerivII + diffDeriv);
-            derivativeMatrices[scvf.outsideScvIdx()][compIdx][compIdx] += (advDerivIJ - diffDeriv);
+            if (!scvf.boundary())
+                derivativeMatrices[scvf.outsideScvIdx()][compIdx][compIdx] += (advDerivIJ - diffDeriv);
         }
     }
 
