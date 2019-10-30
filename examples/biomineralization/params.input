@@ -1,0 +1,77 @@
+[Newton]
+MaxRelativeShift = 1e-8 #
+MaxSteps = 5 #
+
+[Problem]
+Name = Biomineralization #
+
+[Initial]
+initDensityW = 1087 # 			[kg/m³]
+initPressure = 1e5 # 			[Pa]
+
+initxwTC = 2.3864e-7 #	 		[mol/mol]
+initxwNa = 0.0 # 				[mol/mol]
+initxwCl = 0.0 # 				[mol/mol]
+initxwCa = 0.0 # 				[mol/mol]
+initxwUrea = 0.0 # 				[mol/mol]
+initxwTNH = 3.341641e-3 #	 	[mol/mol]
+initxwO2 = 4.4686e-6 # 			[mol/mol]
+initxwSubstrate = 2.97638e-4 # 	[mol/mol]
+initxwSuspendedBiomass = 0.0 # 			[mol/mol]
+
+initBiofilm = 0.0 # 			[-]
+initCalcite = 0.0 # 			[-]
+initTemperature = 298.15 #      [K] 25°C
+
+xwNaCorr = 2.9466e-6 # 			[mol/mol]      //NaCorr to get the pH to 6.2 calculated as molefraction
+xwClCorr = 0.0 # 				[mol/mol]
+
+[Injection]
+injVolumeflux = 1.716666666667e-7 # =10.3/60/1e6 #	//[m³/s] = [ml/min] /[s/min] /[ml/m³]
+
+injTC = 5.8e-7 #				 [kg/kg]		//equilibrium with atmospheric CO2 unter atmospheric pressure
+injNa = 0.0 #				 [kg/m³]		//NaCl injected
+injCa = 13.530742		 #		 [kg/m³]		//computed from 49 g/l CaCl2*2H2O (molar mass = 147.68g/mol --> 0.33molCa/l, equimolar with urea (20g/l and 60g/mol))
+injUrea = 20 #					 [kg/m³]
+injTNH = 3.183840574 #//3.184#	 [kg/m³]		//computed from 10 g/l NH4Cl
+injO2 = 0.008 #					 [kg/m³]
+injSubstrate = 3 #					 [kg/m³]
+injSuspendedBiomass = 0.0665 #				 [kg/m³]		//5.6e7 cfu/ml (40e8cfu/ml~1g/l)
+
+injNaCorr= 0.00379 #			[kg/m³]		//NaCorr to get the pH to 6.2
+injTemperature= 298.15 #        [K]
+injPressure= 1e5 #              [Pa]
+
+numInjections = 212 #
+InjectionParamFile = injections.dat #
+
+[TimeLoop]
+DtInitial = 1 # [s]
+TEnd = 100000 #3203460 # [s]		#
+MaxTimeStepSize = 200 # [s]
+
+[Grid]
+UpperRight = 0.7112  # [m] upper right corner coordinates
+Cells = 56  # [-] number of cells in x,y-direction
+
+[SpatialParams]
+ReferencePorosity = 0.4 # [-]
+ReferencePermeability = 2e-10 # [m^2]
+
+[BioCoefficients]
+ca1 = 8.3753e-8  #		// [1/s] 		kurease fit 2014_10_2, fittet parameter!!!!!!!!!!!!
+ca2 = 8.5114e-7 # 	// [1/s] 		kurease fit 2014_10_2, fittet parameter!!!!!!!!!!!!
+cd1 = 2.894e-8 # 				// [1/s] 		Ebigbo et al. 2010
+dc0 = 3.183e-7 # 				// [1/s] 		Taylor and Jaffe 1990
+kmue = 4.1667e-5  #	// [1/s] 		Connolly et al. 2013
+F = 0.5 #						// [-] 			Mateles 1971
+Ke = 2e-5 #						// [kg/m³] 		Hao et al. 1983
+Ks = 7.99e-4 #					// [kg/m³] 		Taylor and Jaffe 1990
+Yield = 0.5 #					// [-] 			Seto and Alexander 1985
+RhoBiofilm = 6.9 # 			//[kg/m³] 		kurease fit 2014_10_2, fittet parameter!!!!!!!!!!!!
+
+[UreolysisCoefficients]
+kub = 3.81e-4 # 			// [kg_urease/kg_bio] 		calculated from kurease fit 2014_10_2, fittet parameter!!!!!!!!!!!!
+kurease = 706.6667 #	// [mol_urea/(kg_urease s)] Lauchnor et al. 2014
+Ku = 0.355 #		// [mol/kgH2O] 				Lauchnor et al. 2014
+
