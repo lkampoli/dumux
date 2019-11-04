@@ -181,8 +181,6 @@ public:
     MICPColumnProblemSimpleChemistry(std::shared_ptr<const GridGeometry> gridGeometry)
     : ParentType(gridGeometry)
     {
-        Dune::FMatrixPrecision<>::set_singular_limit(1e-35);
-
         name_  = getParam<std::string>("Problem.Name");
 
         // biomass parameters
