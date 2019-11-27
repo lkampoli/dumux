@@ -16,16 +16,15 @@
  *   You should have received a copy of the GNU General Public License       *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
-/*!
- * \file
- * \ingroup Fluidsystems
- * \brief A fluid system for brine, i.e. H2O with dissolved NaCl.
- */
+
+// the header guard
 #ifndef DUMUX_ICP_COMPLEX_SALINITY_BRINE_FLUID_SYSTEM_HH
 #define DUMUX_ICP_COMPLEX_SALINITY_BRINE_FLUID_SYSTEM_HH
 
 #include <dumux/material/fluidsystems/base.hh>
 
+
+// we include all necessary solid components
 #include <dumux/material/constants.hh>
 #include <dumux/material/components/h2o.hh>
 #include <examples/biomineralization/material/components/sodiumion.hh>
@@ -37,14 +36,11 @@
 
 #include <dumux/io/name.hh>
 
+// We enter the namespace Dumux. All Dumux functions and classes are in a namespace Dumux, to make sure they don`t clash with symbols from other libraries you may want to use in conjunction with Dumux.
 namespace Dumux {
 namespace FluidSystems {
 
-/*!
- * \ingroup Fluidsystems
- * \brief A compositional single phase fluid system consisting of
- *        two components, which are H2O and NaCl.
- */
+// In ICPComplexSalinityBrine we make the transition from 3 components contributing to salinity to the single component that is assumed in the brine fluid system.
 template< class Scalar, class H2OType = Components::TabulatedComponent<Dumux::Components::H2O<Scalar>> >
 class ICPComplexSalinityBrine : public Base< Scalar, ICPComplexSalinityBrine<Scalar, H2OType>>
 {
@@ -73,91 +69,48 @@ public:
     static constexpr int comp2Idx = ClIdx; //!< index of the third component
     static constexpr int comp3Idx = CaIdx; //!< index of the fourth component
 
-    /*!
-     * \brief Return the human readable name of the phase
-     * \param phaseIdx The index of the fluid phase to consider
-     */
+    // the fluid phase index
     static const std::string phaseName(int phaseIdx = liquidPhaseIdx)
     {
         assert(phaseIdx == liquidPhaseIdx);
         return IOName::liquidPhase();
     }
 
-    /*!
-     * \brief Returns whether the fluids are miscible
-     * \note There is only one phase, so miscibility makes no sense here
-     */
+    // the miscibility
     static constexpr bool isMiscible()
     {
         return false;
     }
 
-    /*!
-     * \brief Return whether a phase is gaseous
-     * \param phaseIdx The index of the fluid phase to consider
-     */
+    // we do not have a gas phase
     static constexpr bool isGas(int phaseIdx = liquidPhaseIdx)
     {
         assert(phaseIdx == liquidPhaseIdx);
         return false;
     }
 
-    /*!
-     * \brief Returns true if and only if a fluid phase is assumed to
-     *        be an ideal mixture.
-     *
-     * We define an ideal mixture as a fluid phase where the fugacity
-     * coefficients of all components times the pressure of the phase
-     * are indepent on the fluid composition. This assumtion is true
-     * if Henry's law and Raoult's law apply. If you are unsure what
-     * this function should return, it is safe to return false. The
-     * only damage done will be (slightly) increased computation times
-     * in some cases.
-     *
-     * \param phaseIdx The index of the fluid phase to consider
-     */
+    // We need a ideal mixture
     static bool isIdealMixture(int phaseIdx = liquidPhaseIdx)
     {
         assert(phaseIdx == liquidPhaseIdx);
         return true;
     }
 
-    /*!
-     * \brief Returns true if and only if a fluid phase is assumed to
-     *        be compressible.
-     *
-     * Compressible means that the partial derivative of the density
-     * to the fluid pressure is always larger than zero.
-     *
-     * \param phaseIdx The index of the fluid phase to consider
-     */
+    // phase compressibility
     static bool isCompressible(int phaseIdx = liquidPhaseIdx)
     {
         assert(phaseIdx == liquidPhaseIdx);
         return H2O::liquidIsCompressible();
     }
 
-    /*!
-     * \brief Returns true if and only if a fluid phase is assumed to
-     *        be an ideal gas.
-     *
-     * \param phaseIdx The index of the fluid phase to consider
-     */
-
+    // no gas, thus no ideal gas
     static bool isIdealGas(int phaseIdx = liquidPhaseIdx)
     {
         assert(phaseIdx == liquidPhaseIdx);
         return false; /*we're a liquid!*/
     }
 
-    /****************************************
-     * Component related static parameters
-     ****************************************/
-
-    /*!
-     * \brief Return the human readable name of a component
-     * \param compIdx The index of the component to consider
-     */
+    // The component names
     static std::string componentName(int compIdx)
     {
         switch (compIdx)
@@ -170,10 +123,7 @@ public:
         DUNE_THROW(Dune::InvalidStateException, "Invalid component index " << compIdx);
     }
 
-    /*!
-     * \brief Return the molar mass of a component in \f$\mathrm{[kg/mol]}\f$.
-     * \param compIdx The index of the component to consider
-     */
+    // The component molar masses
     static Scalar molarMass(int compIdx)
     {
         switch (compIdx)
@@ -186,14 +136,7 @@ public:
         DUNE_THROW(Dune::InvalidStateException, "Invalid component index " << compIdx);
     }
 
-    /****************************************
-     * thermodynamic relations
-     ****************************************/
-    /*!
-     * \brief Initialize the fluid system's static parameters generically
-     * \note If a tabulated H2O component is used, we do our best to create
-     *       tables that always work.
-     */
+    //initializing
      static void init()
      {
          init(/*tempMin=*/273.15,
@@ -203,18 +146,6 @@ public:
               /*pMax=*/20e6,
               /*numP=*/200);
      }
-
-    /*!
-     * \brief Initialize the fluid system's static parameters using
-     *        problem specific temperature and pressure ranges
-     *
-     * \param tempMin The minimum temperature used for tabulation of water [K]
-     * \param tempMax The maximum temperature used for tabulation of water [K]
-     * \param nTemp The number of ticks on the temperature axis of the  table of water
-     * \param pressMin The minimum pressure used for tabulation of water [Pa]
-     * \param pressMax The maximum pressure used for tabulation of water [Pa]
-     * \param nPress The number of ticks on the pressure axis of the  table of water
-     */
     static void init(Scalar tempMin, Scalar tempMax, unsigned nTemp,
                      Scalar pressMin, Scalar pressMax, unsigned nPress)
     {
@@ -229,11 +160,7 @@ public:
         }
     }
 
-    using Base::density;
-    /*!
-     * \brief Return the phase density [kg/m^3].
-     * \note The density is compuated as a function of the salt mass fraction
-     */
+    // The phase density
     template <class FluidState>
     static Scalar density(const FluidState& fluidState, int phaseIdx = liquidPhaseIdx)
     {
@@ -263,14 +190,7 @@ public:
         return density;
     }
 
-    using Base::fugacityCoefficient;
-    /*!
-     * \copybrief Base::fugacityCoefficient
-     *
-     * \param fluidState An arbitrary fluid state
-     * \param phaseIdx The index of the fluid phase to consider
-     * \param compIdx The index of the component to consider
-     */
+    // The component fugacity coefficients
     template <class FluidState>
     static Scalar fugacityCoefficient(const FluidState &fluidState,
                                       int phaseIdx,
@@ -288,10 +208,7 @@ public:
         return std::numeric_limits<Scalar>::infinity();
     }
 
-    using Base::viscosity;
-    /*!
-     * \brief Return the viscosity of the phase.
-     */
+    // The phase viscosity
     template <class FluidState>
     static Scalar viscosity(const FluidState& fluidState, int phaseIdx = liquidPhaseIdx)
     {
@@ -314,12 +231,7 @@ public:
         return mu_brine/1000.0; // [Pa·s]
     }
 
-    /*!
-     * \brief Vapor pressure of a component \f$\mathrm{[Pa]}\f$.
-     *
-     * \param fluidState The fluid state
-     * \param compIdx The index of the component to consider
-     */
+    // The vapor pressure
     template <class FluidState>
     static Scalar vaporPressure(const FluidState& fluidState, int compIdx)
     {
@@ -339,20 +251,7 @@ public:
             DUNE_THROW(Dune::NotImplemented, "Invalid component index " << compIdx);
     }
 
-    using Base::enthalpy;
-    /*!
-     * \brief Given a phase's composition, temperature and pressure,
-     *        return its specific enthalpy \f$\mathrm{[J/kg]}\f$.
-     *
-     * \param fluidState The fluid state
-     * \param phaseIdx The index of the phase to consider
-     *
-     * Equations given in:
-     * - Palliser & McKibbin (1998) \cite palliser1998 <BR>
-     * - Michaelides (1981) \cite michaelides1981 <BR>
-     * - Daubert & Danner (1989) \cite daubert1989
-     *
-     */
+    // The phase enthalpies
     template <class FluidState>
     static Scalar enthalpy(const FluidState& fluidState, int phaseIdx)
     {
@@ -400,43 +299,20 @@ public:
         return h_ls1*1E3; /*J/kg*/
     }
 
-    using Base::molarDensity;
-    /*!
-     * \brief The molar density \f$\rho_{mol,\alpha}\f$ of
-     *        the fluid phase \f$\alpha\f$ in \f$\mathrm{[mol/m^3]}\f$
-     *
-     * The molar density for the simple relation is defined by the
-     * mass density \f$\rho_\alpha\f$ and the molar mass of the main component \f$M_\kappa\f$:
-     *
-     * \f[\rho_{mol,\alpha} = \frac{\rho_\alpha}{M_\kappa} \;.\f]
-     */
+    // The molar density
     template <class FluidState>
     static Scalar molarDensity(const FluidState& fluidState, int phaseIdx = liquidPhaseIdx)
     {
         return density(fluidState, phaseIdx)/fluidState.averageMolarMass(phaseIdx);
     }
 
-    using Base::diffusionCoefficient;
-    /*!
-     * \brief Returns the diffusion coefficient \f$\mathrm{[-]}\f$
-     *        of a component in a phase.
-     */
     template <class FluidState>
     static Scalar diffusionCoefficient(const FluidState& fluidState, int phaseIdx, int compIdx)
     {
         DUNE_THROW(Dune::NotImplemented, "FluidSystems::ICPComplexSalinityBrine::diffusionCoefficient()");
     }
 
-    using Base::binaryDiffusionCoefficient;
-    /*!
-     * \brief Given a phase's composition, temperature and pressure,
-     *        return the binary diffusion coefficient \f$\mathrm{[m^2/s]}\f$ for components
-     *        \f$\mathrm{i}\f$ and \f$\mathrm{j}\f$ in this phase.
-     * \param fluidState The fluid state
-     * \param phaseIdx Index of the fluid phase
-     * \param compIIdx Index of the component i
-     * \param compJIdx Index of the component j
-     */
+    // The binary diffusion coefficients of the components and the phases main component
     template <class FluidState>
     static Scalar binaryDiffusionCoefficient(const FluidState& fluidState,
                                              int phaseIdx,
@@ -450,10 +326,6 @@ public:
                 using std::swap;
                 swap(compIIdx, compJIdx);
             }
-            //! \todo TODO implement binary coefficients
-            // http://webserver.dmt.upm.es/~isidoro/dat1/Mass%20diffusivity%20data.htm
-            // The link above was given as a reference in brine_air fluid system.
-            // Doesn't work anymore though...
             if (compJIdx == NaIdx || compJIdx == ClIdx || compJIdx == CaIdx)
                 return 1.587e-9;  //[m²/s]    //J. Phys. D: Appl. Phys. 40 (2007) 2769-2776
             else
@@ -465,16 +337,7 @@ public:
          DUNE_THROW(Dune::InvalidStateException, "Invalid phase index: " << phaseIdx);
     }
 
-    using Base::thermalConductivity;
-    /*!
-     * \brief Thermal conductivity of a fluid phase \f$\mathrm{[W/(m K)]}\f$.
-     * \param fluidState An abitrary fluid state
-     * \param phaseIdx The index of the fluid phase to consider
-     *
-     * \todo TODO: For the thermal conductivity of the phases the contribution of
-     *       NaCl is neglected. This contribution is probably not big, but somebody
-     *       would have to find out its influence.
-     */
+    // The thermal conductivity
     template <class FluidState>
     static Scalar thermalConductivity(const FluidState& fluidState, int phaseIdx)
     {
@@ -483,16 +346,7 @@ public:
         DUNE_THROW(Dune::InvalidStateException, "Invalid phase index: " << phaseIdx);
     }
 
-    using Base::heatCapacity;
-    /*!
-     * \brief Specific isobaric heat capacity of a fluid phase.
-     *        \f$\mathrm{[J/(kg*K)}\f$.
-     * \param fluidState An abitrary fluid state
-     * \param phaseIdx The index of the fluid phase to consider
-     *
-     * \todo TODO: The calculation of the isobaric heat capacity is preliminary. A better
-     *       description of the influence of NaCl on the phase property has to be found.
-     */
+    // The phase heat capacity
     template <class FluidState>
     static Scalar heatCapacity(const FluidState &fluidState, int phaseIdx)
     {

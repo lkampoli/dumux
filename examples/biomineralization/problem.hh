@@ -17,68 +17,69 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
 
+// ## Header guard
+// The header guard (or include guard) prevents compilation errors due to duplicate definitions. Here, a unique name needs to be defined for the header file:
 #ifndef DUMUX_MICP_COLUMN_SIMPLE_CHEM_PROBLEM_HH
 #define DUMUX_MICP_COLUMN_SIMPLE_CHEM_PROBLEM_HH
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
+// ## Include files
+// We use the dune yasp grid.
 #include <dune/grid/yaspgrid.hh>
-// #include <dune/grid/uggrid.hh>
 
+// We include the box discretization scheme.
 #include <dumux/discretization/method.hh>
-#include <dumux/discretization/cctpfa.hh>
 #include <dumux/discretization/box.hh>
+// We include eval gradients to evaluate the pressure gradient for the detachment of biomass
 #include <dumux/discretization/evalgradients.hh>
-#include <dumux/porousmediumflow/problem.hh>
 
+// We include the header which are needed for the biomineralization problem and model.
+#include <dumux/porousmediumflow/problem.hh>
+#include <dumux/porousmediumflow/2pncmin/model.hh>
+
+// We include the necessary material files
 #include <examples/biomineralization/material/fluidsystems/biominsimplechemistry.hh>
 #include <examples/biomineralization/material/solidsystems/biominsolids.hh>
 #include <examples/biomineralization/material/components/ammonia.hh>
-
-#include <dumux/porousmediumflow/problem.hh>
-// #include <dumux/porousmediumflow/2picp/model.hh>
-    //No fancy secondary components in the simple chemistry version --> 2pncmin is sufficient!
-#include <dumux/porousmediumflow/2pncmin/model.hh>
-
 #include <dumux/material/binarycoefficients/brine_co2.hh>
+#include <examples/biomineralization/material/co2tableslaboratory.hh>
 
+// We include the header that specifies all spatially variable parameters.
 #include "spatialparams.hh"
-#include "material/co2tableslaboratory.hh"
 
 #include "dumux/linear/seqsolverbackend.hh"
 
+// ## Define basic properties for our simulation
+// We enter the namespace Dumux. All Dumux functions and classes are in a namespace Dumux, to make sure they don't clash with symbols from other libraries you may want to use in conjunction with Dumux. One could use these functions and classes by prefixing every use of these names by ::, but that would quickly become cumbersome and annoying. Rather, we simply import the entire Dumux namespace for general use.
 namespace Dumux
 {
+// The problem class is forward declared.
 template <class TypeTag>
 class MICPColumnProblemSimpleChemistry;
 
+// We enter the namespace Properties, which is a sub-namespace of the namespace Dumux.
 namespace Properties
 {
-NEW_PROP_TAG(CO2Tables); //!< The CO2 Tables that are used
+// We define the CO2 tables used as a new property to be used for the Fluidsystem
+NEW_PROP_TAG(CO2Tables);
 
-// Create new type tags
+// We create new type tag for our simulation which inherits from the 2pncmin model and the box discretization
 namespace TTag {
 struct MICPColumnSimpleChemistryTypeTag { using InheritsFrom = std::tuple<TwoPNCMin>; };
 struct MICPColumnSimpleChemistryBoxTypeTag { using InheritsFrom = std::tuple<MICPColumnSimpleChemistryTypeTag, BoxModel>; };
 } // end namespace TTag
 
-// Set the grid type
-// template<class TypeTag>
-// struct Grid<TypeTag, TTag::MICPColumnSimpleChemistryTypeTag> { using type = Dune::UGGrid<2>; };
+// We set the grid to a 1D Yasp Grid
 template<class TypeTag>
-// struct Grid<TypeTag, TTag::MICPColumnSimpleChemistryTypeTag> { using type = Dune::YaspGrid<2>; };
 struct Grid<TypeTag, TTag::MICPColumnSimpleChemistryTypeTag> { using type = Dune::YaspGrid<1>; };
 
-// Set the problem property
+// We set the problem  used for our simulation, defining boundary and initial conditions (see below)
 template<class TypeTag>
 struct Problem<TypeTag, TTag::MICPColumnSimpleChemistryTypeTag> { using type = MICPColumnProblemSimpleChemistry<TypeTag>; };
 
-//Set the CO2 tables used.
+// We set the CO2 tables used for our simulation
 SET_TYPE_PROP(MICPColumnSimpleChemistryTypeTag, CO2Tables, Dumux::ICP::CO2Tables);
 
-// set the fluidSystem
+// We set the fluidSystem  used for our simulation
 template<class TypeTag>
 struct FluidSystem<TypeTag, TTag::MICPColumnSimpleChemistryTypeTag>
 {
@@ -88,7 +89,7 @@ struct FluidSystem<TypeTag, TTag::MICPColumnSimpleChemistryTypeTag>
     using type = Dumux::FluidSystems::BioMinSimpleChemistryFluid<Scalar, CO2Tables, H2OTabulated>;
 };
 
-// set the solidSystem
+// We set the solidSystem  used for our simulation
 template<class TypeTag>
 struct SolidSystem<TypeTag, TTag::MICPColumnSimpleChemistryTypeTag>
 {
@@ -96,22 +97,20 @@ struct SolidSystem<TypeTag, TTag::MICPColumnSimpleChemistryTypeTag>
     using type = SolidSystems::BioMinSolidPhase<Scalar>;
 };
 
-
-// Set the spatial parameters
+// We define the spatial parameters for our simulation. The values are specified in the corresponding spatialparameters header file, which is included above.
 template<class TypeTag>
 struct SpatialParams<TypeTag, TTag::MICPColumnSimpleChemistryTypeTag> { using type = ICPSpatialParams<TypeTag>; };
 
+// We set the two-phase primary variable formulation used for our simulation
 template<class TypeTag>
 struct Formulation<TypeTag, TTag::MICPColumnSimpleChemistryTypeTag>
 { static constexpr auto value = TwoPFormulation::p0s1; };
 
-}
+}// We leave the namespace Properties.
 
-/*!
- * \ingroup TwoPNCSecCompMinModel
- * \ingroup ImplicitTestProblems
- * \brief Problem for enzyme-induced calcium carbonate precipitation
- *  */
+// ## The problem class
+// We enter the problem class where all necessary boundary conditions and initial conditions are set for our simulation.
+// As this is a biomineralization problem in porous media, we inherit from the basic porous-media-flow problem
 template <class TypeTag>
 class MICPColumnProblemSimpleChemistry : public PorousMediumFlowProblem<TypeTag>
 {
@@ -124,6 +123,8 @@ class MICPColumnProblemSimpleChemistry : public PorousMediumFlowProblem<TypeTag>
     using VolumeVariables = GetPropType<TypeTag, Properties::VolumeVariables>;
     using FluxVariables = GetPropType<TypeTag, Properties::FluxVariables>;
     using Indices = typename GetPropType<TypeTag, Properties::ModelTraits>::Indices;
+
+    // We define some indices for convenience to be used later when defining the initial and boundary conditions
     enum {
         numComponents = FluidSystem::numComponents,
 
@@ -151,8 +152,6 @@ class MICPColumnProblemSimpleChemistry : public PorousMediumFlowProblem<TypeTag>
         BiosuspIdx = FluidSystem::BiosuspIdx,
 
         wPhaseIdx = FluidSystem::wPhaseIdx,
-
-        //Index of the primary component of G and L phase
         conti0EqIdx = Indices::conti0EqIdx,
 
         // Phase State
@@ -178,9 +177,11 @@ class MICPColumnProblemSimpleChemistry : public PorousMediumFlowProblem<TypeTag>
     using GridVariables = GetPropType<TypeTag, Properties::GridVariables>;
 
 public:
+    // This is the constructor of our problem class.
     MICPColumnProblemSimpleChemistry(std::shared_ptr<const GridGeometry> gridGeometry)
     : ParentType(gridGeometry)
     {
+        // We read the parameters from the params.input file.
         name_  = getParam<std::string>("Problem.Name");
 
         // biomass parameters
@@ -236,14 +237,15 @@ public:
         injTemperature_ = getParam<Scalar>("Injection.injTemperature");
         injPressure_ = getParam<Scalar>("Injection.injPressure");
 
-
+        // We get the number of injections and the injection data file name from params.input
         numInjections_ = getParam<int>("Injection.numInjections");
         injectionParameters_ = getParam<std::string>("Injection.InjectionParamFile");
 
+        // We resize the permeability vector contaning the permeabilities for the additional output
         unsigned int codim = GetPropType<TypeTag, Properties::GridGeometry>::discMethod == DiscretizationMethod::box ? dim : 0;
         permeability_.resize(gridGeometry->gridView().size(codim));
-//         scvPotGradNorm_.resize(gridGeometry->gridView().size(codim));
 
+        // We read from the injection data file which injection type we have in each episode. We will use this in the Neumann boundary condition to set time dependend, changing boundary conditions. We do this similarly to the episode ends in the main file.
         std::ifstream injectionData;
         std::string row;
         injectionData.open( injectionParameters_); // open the Injection data file
@@ -255,18 +257,6 @@ public:
             exit(1) ;
         }
         int tempType = 0;
-
-        // print file to make sure it is the right file
-        std::cout << "Read file: " << injectionParameters_ << " ..." << std::endl << std::endl;
-        while(!injectionData.eof())
-        {
-            getline(injectionData, row);
-            std::cout << row << std::endl;
-        }
-        injectionData.close();
-
-        //read data from file
-        injectionData.open(injectionParameters_);
 
         while(!injectionData.eof())
         {
@@ -290,7 +280,7 @@ public:
 
         injectionData.close();
 
-//      check the injection data against the number of injections specified in the parameter file
+//   We   check the injection data against the number of injections specified in the parameter file and print an error message if the test fails
         if (injType_.size() != numInjections_)
         {
             std::cerr <<  "numInjections from the parameterfile and the number of injection types specified in the injection data file do not match!"
@@ -300,68 +290,52 @@ public:
             exit(1) ;
         }
 
+        // We initialize the fluidsystem
         FluidSystem::init(/*startTemp=*/initTemperature_ -5.0, /*endTemp=*/initTemperature_ +5.0, /*tempSteps=*/5,
              /*startPressure=*/1e4, /*endPressure=*/1e6, /*pressureSteps=*/500);
     }
 
+    // A function to set the time in the problem, this is done during the time loop in main.cc
     void setTime( Scalar time )
     {
         time_ = time;
     }
 
+    // A function to set the time step size in the problem, this is done during the time loop in main.cc.
+    // We need the time step size to regularize the reactive source terms.
     void setTimeStepSize( Scalar timeStepSize )
     {
         timeStepSize_ = timeStepSize;
     }
 
+    // A function to set the episode index in the problem, this is done during the time loop in main.cc.
+    // We need the episode index to choose the right Neumann boundary condition for each episode based on the injection data.
     void setEpisodeIdx( Scalar epiIdx )
     {
         episodeIdx_ = epiIdx;
     }
 
+    // A function to return the injectionType
     int injectionType(int episodeIdx)
     {
         return injType_[episodeIdx];
     }
 
-   /*!
-    * \name Problem parameters
-    */
-
-
-   /*!
-    * \brief The problem name.
-    *
-    * This is used as a prefix for files generated by the simulation.
-    */
-//    const char *name() const
+    // Get the problem name. It is used as a prefix for files generated by the simulation.
     const std::string name() const
     { return name_; }
 
-    /* \brief Returns the temperature within the domain.
-    *
-    * This problem assumes a temperature of 25 degrees Celsius.
-    */
+    // Return the temperature
     Scalar temperature() const
     {
-        return initTemperature_; //
+        return initTemperature_;
     };
 
-    // \}
-
-   /*!
-    * \name Boundary conditions
-    */
-    // \{
-
-    /*!
-    * \brief Specifies which kind of boundary condition should be
-    *        used for which equation on a given boundary segment.
-    */
+    // We specify the boundary condition type.
     BoundaryTypes boundaryTypesAtPos(const GlobalPosition &globalPos) const
     {
         BoundaryTypes bcTypes;
-
+        // We set all to Neumann, except for the top boundary, which is set to Dirichlet.
         Scalar zmax = this->gridGeometry().bBoxMax()[dim - 1];
         bcTypes.setAllNeumann();
         if(globalPos[dim - 1] > zmax - eps_)
@@ -370,59 +344,42 @@ public:
         return bcTypes;
     }
 
-   /*!
-    * \brief Evaluate the boundary conditions for a dirichlet
-    *        boundary segment.
-    */
+    // We define the Dirichlet boundary conditions
     PrimaryVariables dirichletAtPos(const GlobalPosition &globalPos) const
     {
         PrimaryVariables priVars(0.0);
         priVars.setState(wPhaseOnly);
-
+        // We recycle the initial conditions, but additionally enforce that substrate and oxygen necessary for biomass growth are zero.
         priVars = initial_(globalPos);
         priVars[xwBiosubIdx] = 0.0;
         priVars[xwO2Idx] = 0.0;
         return priVars;
-//         return initial_(globalPos);
     }
 
-   /*!
-    * \brief Evaluate the initial value for a control volume.
-    *
-    * \param globalPos The global position
-    *
-    * For this method, the \a values parameter stores primary
-    * variables.
-    */
+
+    // We define the initial conditions
     PrimaryVariables initialAtPos(const GlobalPosition& globalPos) const
     {
+        // We actually define the initial conditions in a private function...
         return initial_(globalPos);
     }
 
-   /*!
-    * \brief Evaluate the boundary conditions for a Neumann
-    *        boundary segment.
-    *
-    * For this method, the \a values parameter stores the mass flux
-    * in normal direction of each component. Negative values mean
-    * influx.
-    *
-    * The units must be according to either using mole or mass fractions. (mole/(m^2*s) or kg/(m^2*s))
-    */
+
+    // We define the Neumann boundary conditions, which are time or rather episode depended.
     NumEqVector neumannAtPos(const GlobalPosition& globalPos) const
     {
         NumEqVector values(0.0);
-//         Scalar diameter = this->gridGeometry().bBoxMax()[0];
+
+        // We calculate the injected water velocity based on the volume flux injected into a 1 inch diameter column.
         Scalar diameter = 0.0254;
         Scalar waterFlux = injQ_/(3.14*diameter*diameter/4.); //[m/s]
 
         int injProcess = injType_[episodeIdx_];
-//         std::cout<<"injProcess = " <<injProcess <<", injType_[" <<episodeIdx_ <<"]=" << injType_[episodeIdx_]<<std::endl;
 
-//         negative values for injection
+        // We only have injection at the bottom, negative values for injection
         if(globalPos[dim - 1]<= eps_)
         {
-            //basic rinse injection (injProcess == -1 )
+            //We set the injection BC to the basic rinse injection and later only change the BC for those components that are different.
             values[conti0EqIdx + wCompIdx] = -waterFlux * 996/FluidSystem::molarMass(wCompIdx);
             values[conti0EqIdx + nCompIdx] = -waterFlux * injTC_*996 /FluidSystem::molarMass(nCompIdx);
             values[conti0EqIdx + xwCaIdx] = 0;
@@ -436,17 +393,24 @@ public:
             values[conti0EqIdx + xwClIdx] = -waterFlux *injTNH_ /NH3::molarMass()     //NH4Cl --->  mol Cl = mol NH4
                                             -waterFlux *injNa_ /FluidSystem::molarMass(NaIdx);      //NaCl ---> mol Cl = mol Na
 
-            if (injProcess == -1)   // rinse, used as standard injection fluid
+            //injProcess == -1 codes for the basic rinse injection to which we set all the BC above, so we do not change anything here.
+            // Rinse does neither contain suspended biomass (Biosusp), nor calcium chloride, nor urea
+            if (injProcess == -1)
             {
                 //          do not change anything.
             }
 
-            else if (injProcess == -99 || injProcess == 9) // no injection
+            // We also have no-injection, no-flow periods, which are coded for by -99 or 9. Thus, for no flow, we set the Neumann BC to zero for all components.
+            else if (injProcess == -99 || injProcess == 9)
             {
                 values = 0.0; //mol/m²/s
             }
 
-            else if (injProcess == 1 || injProcess == 11)  //ca-rich injection: ca and urea injected additionally to rinse-fluid, Na (pH) and Cl are also different(CaCl2)
+            // injProcess == 1 or injProcess == 11 codes for an injection of mineralization medium containing urea and calcium chloride.
+            // Thus, we add BC terms for those components.
+            // Additionally, we need to adjust the amount of water injected due to the high concentration of other components injected.
+            // Finally, we need to adapt the injected NaCorr concentration to account fo the lower pH.
+            else if (injProcess == 1 || injProcess == 11)
             {
                 values[conti0EqIdx + wCompIdx] = - waterFlux * 0.8716 * densityW_ /FluidSystem::molarMass(wCompIdx);    //TODO 0.8716 check factor!!!
                 values[conti0EqIdx + nCompIdx] = - waterFlux * injTC_ * densityW_ /FluidSystem::molarMass(nCompIdx);
@@ -459,12 +423,16 @@ public:
                                                 -waterFlux *injNa_ /FluidSystem::molarMass(NaIdx);      //NaCl ---> mol Cl = mol Na
             }
 
-            else if (injProcess == 0 || injProcess == 3 )   //urea-injections: urea is injected additionally to rinse-fluid
+            // injProcess == 0 or injProcess == 3 codes for a resuscitation injection to regrow biomass.
+            // It is similar to a rinse injection, but with added urea, which is what we add to the basic rinse
+            else if (injProcess == 0 || injProcess == 3 )
             {
                 values[conti0EqIdx + xwUreaIdx] = - waterFlux * injUrea_ /FluidSystem::molarMass(UreaIdx);
             }
 
-            else if(injProcess == 2)        //inoculation: same as rinse, but with bacteria
+            // injProcess == 2 codes for a inoculation or biomass injection.
+            // It is similar to a rinse injection, but with added suspended biomass, which is what we add to the basic rinse
+            else if(injProcess == 2)
             {
                 values[conti0EqIdx + xwBiosuspIdx] = -waterFlux * injBiosusp_ /FluidSystem::molarMass(xwBiosuspIdx);
             }
@@ -473,6 +441,7 @@ public:
                 DUNE_THROW(Dune::InvalidStateException, "Invalid injection process " << injProcess);
             }
         }
+        // No flow conditions anywhere else than the bottom.
         else
         {
                values = 0.0; //mol/m²/s
@@ -480,32 +449,8 @@ public:
         return values;
     }
 
-
-   /*!
-    * \name Volume terms
-    */
-    // \{
-
-   /*!
-    * \brief Evaluate the source term for all phases within a given
-    *        sub-control-volume.
-    *
-    * This is the method for the case where the source term is
-    * potentially solution dependent and requires some quantities that
-    * are specific to the fully-implicit method.
-    *
-    * \param values The source and sink values for the conservation equations in units of
-    *                 \f$ [ \textnormal{unit of conserved quantity} / (m^3 \cdot s )] \f$
-    * \param element The finite element
-    * \param fvGeometry The finite-volume geometry
-    * \param elemVolVars All volume variables for the element
-    * \param scv The subcontrolvolume
-    *
-    * For this method, the \a values parameter stores the conserved quantity rate
-    * generated or annihilate per volume unit. Positive values mean
-    * that the conserved quantity is created, negative ones mean that it vanishes.
-    * E.g. for the mass balance that would be a mass rate in \f$ [ kg / (m^3 \cdot s)] \f$.
-    */
+    // We calculate the reactive source and sink terms.
+    // For the details, see the "simplified chemistry case" in the dissertation of Hommel available at https://elib.uni-stuttgart.de/handle/11682/8787
     NumEqVector source(const Element &element,
                    const FVElementGeometry& fvGeometry,
                    const ElementVolumeVariables& elemVolVars,
@@ -555,12 +500,12 @@ public:
             mUrea = 0;
 
         // compute rate of ureolysis:
-        Scalar vmax = kurease_; //According to new experimental results without pH dependence
-        Scalar Zub = kub_ *  massBiofilm; //new nub_=1 ! pow(massBiofilm,nub_);        // [kgurease/m³]
-        Scalar rurea = vmax * Zub * mUrea / (Ku_ + mUrea); //[mol/m³s] //no NH4 in simple chemistry!
-//         Scalar rurea = vmax * Zub * mUrea / ((Ku_ + mUrea) * (1 + mNH4 / KNH4_)); //[mol/m³s]
+        Scalar vmax = kurease_;
+        Scalar Zub = kub_ *  massBiofilm;   // [kgurease/m³]
+        Scalar rurea = vmax * Zub * mUrea / (Ku_ + mUrea); //[mol/m³s]
 
         // compute precipitation rate of calcite, no dissolution! Simplification: rprec = rurea
+        // additionally regularize the precipitation rate that we do not precipitate more calcium than available.
         Scalar rprec = rurea;
         if(rprec >
             elemVolVars[scv].moleFraction(wPhaseIdx,CaIdx) * Sw * porosity * elemVolVars[scv].molarDensity(wPhaseIdx) / timeStepSize_)
@@ -575,10 +520,9 @@ public:
 
         // compute biomass decay coefficient and rate:
         Scalar dcf = dc0_;
-        dcf += rprec * SolidSystem::molarMass(SolidSystem::CalciteIdx) /               //[1/s]
+        dcf += rprec * SolidSystem::molarMass(SolidSystem::CalciteIdx) /
                 (densityCalcite * (initialPorosity - volFracCalcite));
-        Scalar dcb = dc0_; //no pH for simple chemistry!!       //[1/s]
-//         Scalar dcb = dc0_ * (1 + (mH * mH)/KpHa_ + KpHb_/mH); //KpHb_ = 0!!!!!!        //[1/s]
+        Scalar dcb = dc0_;       //[1/s]
         Scalar rdcf = dcf * massBiofilm; //[kg/m³s]
         Scalar rdcb = dcb * porosity * Sw * cBio;      //[kg/m³s]
 
@@ -610,15 +554,13 @@ public:
         return source;
     }
 
-   /*!
-    * \brief Adds additional VTK output data to the VTKWriter. Function is called by the output module on every write.
-    */
-
+    // Function to return the permeability for additional vtk output
     const std::vector<Scalar>& getPermeability()
     {
         return permeability_;
     }
 
+    // Function to update the permeability for additional vtk output
     void updateVtkOutput(const SolutionVector& curSol)
     {
         for (const auto& element : elements(this->gridGeometry().gridView()))
@@ -642,8 +584,7 @@ public:
     { gridVariables_ = gv; }
 
 private:
-    // internal method for the initial condition (reused for the
-    // dirichlet conditions!)
+    // Internal method for the initial condition reused for the dirichlet conditions.
     PrimaryVariables initial_(const GlobalPosition &globalPos) const
     {
         PrimaryVariables priVars(0.0);
@@ -662,22 +603,8 @@ private:
 
         return priVars;
     }
-    /*!
-        * \brief Returns the molality of NaCl (mol NaCl / kg water) for a given mole fraction
-        *
-        * \param XwNaCl the XwNaCl [kg NaCl / kg solution]
-        */
-    static Scalar massTomoleFrac_(Scalar XwNaCl)
-    {
-        const Scalar Mw = FluidSystem::molarMass(wCompIdx);  // 18.015e-3; /* molecular weight of water [kg/mol] */
-        const Scalar Ms = FluidSystem::molarMass(NaIdx) + FluidSystem::molarMass(ClIdx); // 58.44e-3; /* molecular weight of NaCl  [kg/mol] */
 
-        const Scalar X_NaCl = XwNaCl;
-        /* XwNaCl: conversion from mass fraction to mol fraction */
-        const Scalar xwNaCl = -Mw * X_NaCl / ((Ms - Mw) * X_NaCl - Ms);
-        return xwNaCl;
-    }
-
+    // Internal method to calculate the molality of a component based on its mole fraction.
     static Scalar moleFracToMolality(Scalar moleFracX, Scalar moleFracSalinity, Scalar moleFracCTot)
     {
         Scalar molalityX = moleFracX / (1 - moleFracSalinity - moleFracCTot) / FluidSystem::molarMass(FluidSystem::H2OIdx);
@@ -685,11 +612,12 @@ private:
     }
 
 
+    // eps is used as a small value for the definition of the boundry conditions
     static constexpr Scalar eps_ = 1e-6;
 
+    // initial condition parameters
     Scalar initPressure_;
     Scalar densityW_;//1087; // rhow=1087;
-
     Scalar initxwTC_;//2.3864e-7;       // [mol/mol]
     Scalar initxwNa_;//0;
     Scalar initxwCl_;//0;
@@ -701,12 +629,11 @@ private:
     Scalar initxwBiosusp_;//0;
     Scalar xwNaCorr_;//2.9466e-6;
     Scalar xwClCorr_;//0;
-
     Scalar initBiofilm_;
     Scalar initCalcite_;
     Scalar initTemperature_;
 
-    // biomass parameters
+    // biomass parameters for source/sink calculations
     Scalar ca1_;
     Scalar ca2_;
     Scalar cd1_;
@@ -716,32 +643,34 @@ private:
     Scalar Ke_;
     Scalar Ks_;
     Scalar Yield_;
-    // urease parameters
+    // urease parameters for source/sink calculations
     Scalar kub_;
     Scalar kurease_;
     Scalar Ku_;
 
+    // injection parameters
     Scalar injQ_;
-    Scalar angle_;
-
-    Scalar injTC_;//5.8e-7;             // [kg/kg]
-    Scalar injNa_;//0.00379;                // [kg/m³]
-    Scalar injCa_;//13.3593333333;          // [kg/m³]      //computed from 0.333mol/l CaCl2
-    Scalar injUrea_;//20;                   // [kg/m³]
-    Scalar injTNH_;//3.183840574;//3.184;               // [kg/m³]      //computed from 10 g/l NH4Cl
-    Scalar injO2_;//0.008;                  // [kg/m³]
-    Scalar injSub_;//3;                 // [kg/m³]
-    Scalar injBiosusp_;//0.0675;            // [kg/m³]      //2.7e8 cfu/ml (40e8cfu/ml~1g/l)
-    Scalar injNaCorr_;
+    Scalar injTC_;   // [kg/kg]
+    Scalar injNa_;   // [kg/m³]
+    Scalar injCa_;   // [kg/m³]      //computed from CaCl2
+    Scalar injUrea_; // [kg/m³]
+    Scalar injTNH_;  // [kg/m³]      //computed from NH4Cl
+    Scalar injO2_;   // [kg/m³]
+    Scalar injSub_;  // [kg/m³]
+    Scalar injBiosusp_;  // [kg/m³]
+    Scalar injNaCorr_;   // [kg/m³]
     Scalar injTemperature_;
     Scalar injPressure_;
-
     int numInjections_;
     std::string injectionParameters_;
     std::vector<int> injType_;
+
+    // the problem name
     std::string name_;
+    // the permeability for output
     std::vector<Scalar> permeability_;
 
+    // timing parameters
     Scalar time_ = 0.0;
     Scalar timeStepSize_ = 0.0;
     int episodeIdx_ = 0;

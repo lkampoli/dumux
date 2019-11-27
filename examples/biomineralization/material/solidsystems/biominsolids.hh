@@ -16,35 +16,30 @@
  *   You should have received a copy of the GNU General Public License       *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
-/*!
- * \file
- * \ingroup SolidSystems
- * \brief @copybrief Dumux::SolidSystems::InertSolidPhase
- */
+
+// the header guard
 #ifndef DUMUX_SOLIDSYSTEMS_MICP_SOLID_PHASE_HH
 #define DUMUX_SOLIDSYSTEMS_MICP_SOLID_PHASE_HH
 
 #include <string>
 #include <dune/common/exceptions.hh>
 
+// we include all necessary solid components
 #include <examples/biomineralization/material/components/biofilm.hh>
 #include <dumux/material/components/calcite.hh>
 #include <dumux/material/components/granite.hh>
 
+// We enter the namespace Dumux. All Dumux functions and classes are in a namespace Dumux, to make sure they don`t clash with symbols from other libraries you may want to use in conjunction with Dumux.
 namespace Dumux {
 namespace SolidSystems {
 
-/*!
- * \ingroup SolidSystems
- * \brief A solid phase consisting of a single inert solid component and two reactive solid components
- * \note a solid is considered inert if it can't dissolve in a liquid and
- *       and can't increase its mass by precipitation from a fluid phase.
- * \note inert components have to come after all non-inert components
- */
+// In the BioMinSolidPhase solid system, we define all functions needed to describe the solids accounted for in our simulation
 template <class Scalar>
 class BioMinSolidPhase
 {
 public:
+
+    // We use convenient declarations that we derive from the property system.
     using Biofilm = Components::Biofilm<Scalar>;
     using Calcite = Components::Calcite<Scalar>;
     using Granite = Components::Granite<Scalar>;
@@ -58,11 +53,7 @@ public:
     static constexpr int CalciteIdx = 1;
     static constexpr int GraniteIdx = 2;
 
-    /*!
-     * \brief Return the human readable name of a solid phase
-     *
-     * \param compIdx The index of the solid phase to consider
-     */
+    // The component names
     static std::string componentName(int compIdx)
     {
         switch (compIdx)
@@ -74,27 +65,19 @@ public:
         }
     }
 
-    /*!
-     * \brief A human readable name for the solid system.
-     */
+    // The solid system's name
     static std::string name()
     { return "EnzymeMinSolidPhase"; }
 
-    /*!
-     * \brief Returns whether the phase is incompressible
-     */
+    // We assume incompressible solids
     static constexpr bool isCompressible(int compIdx)
     { return false; }
 
-    /*!
-     * \brief Returns whether all components are inert (don't react)
-     */
+    // we have one inert component, the others may change
     static constexpr bool isInert()
     { return (numComponents == numInertComponents); }
 
-    /*!
-     * \brief The molar mass in \f$\mathrm{[kg/mol]}\f$ of the component.
-     */
+    // The component molar masses
     static Scalar molarMass(int compIdx)
     {
         switch (compIdx)
@@ -106,9 +89,7 @@ public:
         }
     }
 
-    /*!
-     * \brief The density \f$\mathrm{[kg/m^3]}\f$ of the solid phase at a given pressure and temperature.
-     */
+    // The average density
     template <class SolidState>
     static Scalar density(const SolidState& solidState)
     {
@@ -125,9 +106,7 @@ public:
                /(volFrac1+volFrac2+volFrac3);
     }
 
-    /*!
-     * \brief The density \f$\mathrm{[kg/m^3]}\f$ of the solid phase at a given pressure and temperature.
-     */
+    // The component densities
     template <class SolidState>
     static Scalar density(const SolidState& solidState, const int compIdx)
     {
@@ -140,9 +119,7 @@ public:
         }
     }
 
-    /*!
-     * \brief The molar density of the solid phase at a given pressure and temperature.
-     */
+    // The component molar densities
     template <class SolidState>
     static Scalar molarDensity(const SolidState& solidState, const int compIdx)
     {
@@ -155,9 +132,8 @@ public:
         }
     }
 
-    /*!
-     * \brief Thermal conductivity of the solid \f$\mathrm{[W/(m K)]}\f$.
-     */
+
+    // The average thermal conductivity
     template <class SolidState>
     static Scalar thermalConductivity(const SolidState &solidState)
     {
@@ -174,9 +150,8 @@ public:
                /(volFrac1+volFrac2+volFrac3);
     }
 
-    /*!
-     * \brief Specific isobaric heat capacity of the pure solids \f$\mathrm{[J/(kg K)]}\f$.
-     */
+
+    // The average heat capacity
     template <class SolidState>
     static Scalar heatCapacity(const SolidState &solidState)
     {

@@ -18,13 +18,8 @@
  *   You should have received a copy of the GNU General Public License       *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
-/**
- * \file
- *
- * \brief Provides the class with the tabulated values of CO2 for the
- *        induced calcium carbonate precipitation in laboratory setups with
- *        ambient conditions
- */
+
+// the header guard
 #ifndef DUMUX_ICP_CO2TABLES_LABORATORY_HH
 #define DUMUX_ICP_CO2TABLES_LABORATORY_HH
 

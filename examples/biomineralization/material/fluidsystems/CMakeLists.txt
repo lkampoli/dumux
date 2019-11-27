@@ -1,4 +1,4 @@
 #install headers
 install(FILES
-enzymemin.hh
+biominsimplechemistry.hh
 DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dumux/material/fluidsystems)

@@ -16,35 +16,32 @@
  *   You should have received a copy of the GNU General Public License       *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
+
+// the header guard
 #ifndef DUMUX_ICP_SPATIAL_PARAMS_HH
 #define DUMUX_ICP_SPATIAL_PARAMS_HH
 
+// We include the basic spatial parameters for finite volumes file from which we will inherit
 #include <dumux/material/spatialparams/fv.hh>
+// We include the files for the two-phase laws
 #include <dumux/material/fluidmatrixinteractions/2p/linearmaterial.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
+// We include the laws for changing porosity and permeability
 #include <dumux/material/fluidmatrixinteractions/porosityprecipitation.hh>
 #include <dumux/material/fluidmatrixinteractions/permeabilitykozenycarman.hh>
 
-
+// We enter the namespace Dumux. All Dumux functions and classes are in a namespace Dumux, to make sure they don`t clash with symbols from other libraries you may want to use in conjunction with Dumux.
 namespace Dumux{
-//forward declaration
-template<class TypeTag>
-class ICPSpatialParams;
 
-/*!
-* \ingroup 2PICPModel
-* \brief Definition of the spatial parameters for the two-phase
-* induced calcium carbonate precipitation problem.
-*/
-// template<class TypeTag>
-// class ICPSpatialParams : public FVSpatialParams<TypeTag>
+//In the ICPSpatialParams class we define all functions needed to describe the spatial distributed parameters.
 template<class TypeTag>
 class ICPSpatialParams
 : public FVSpatialParams<GetPropType<TypeTag, Properties::GridGeometry>,
                          GetPropType<TypeTag, Properties::Scalar>,
                          ICPSpatialParams<TypeTag>>
 {
+    // We introduce using declarations that are derived from the property system which we need in this class
     using Scalar = GetPropType<TypeTag, Properties::Scalar>;
     using GridGeometry = GetPropType<TypeTag, Properties::GridGeometry>;
     using ParentType = FVSpatialParams<GridGeometry, Scalar, ICPSpatialParams<TypeTag>>;
@@ -62,6 +59,7 @@ class ICPSpatialParams
     using Element = typename GridView::template Codim<0>::Entity;
 
 public:
+    // In the constructor be read some values from the `params.input` and initialize the material params laws
     using SolidSystem = GetPropType<TypeTag, Properties::SolidSystem>;
     // type used for the permeability (i.e. tensor or scalar)
     using PermeabilityType = Scalar;
@@ -91,55 +89,26 @@ public:
         // parameters for the Brooks-Corey law
         materialParams_.setPe(1e4);
         materialParams_.setLambda(2.0);
-/*
-                //thermalconductivity
-                lambdaSolid_ = 14.7; //[W/(m*K)] Acosta et al. [2006]*/
     }
 
-    /*!
-     *  \brief Define the reference porosity \f$[-]\f$ distribution.
-     *  This is the porosity of the porous medium without any of the
-     *  considered solid phases.
-     *
-     *  \param element The finite element
-     *  \param scv The sub-control volume
-     */
+    // We return the reference or initial porosity
     Scalar referencePorosity(const Element& element, const SubControlVolume &scv) const
     { return referencePorosity_; }
 
 
-    /*!
-     *  \brief Define the volume fraction of the inert component
-     *
-     *  \param globalPos The global position in the domain
-     *  \param compIdx The index of the inert solid component
-     */
+    // We return the volume fraction of the inert component
     template<class SolidSystem>
     Scalar inertVolumeFractionAtPos(const GlobalPosition& globalPos, int compIdx) const
     { return 1.0-referencePorosity_; }
 
-    /*!
-     *  \brief Return the actual recent porosity \f$[-]\f$ accounting for
-     *  clogging caused by mineralization
-     *
-     *  \param element The finite element
-     *  \param scv The sub-control volume
-     */
+    // We return the updated porosity
     template<class ElementSolution>
     Scalar porosity(const Element& element,
                     const SubControlVolume& scv,
                     const ElementSolution& elemSol) const
     { return poroLaw_.evaluatePorosity(element, scv, elemSol, referencePorosity_); }
 
-
-    /*! Intrinsic permeability tensor K \f$[m^2]\f$ depending
-     *  on the position in the domain
-     *
-     *  \param element The finite volume element
-     *  \param scv The sub-control volume
-     *
-     *  Solution dependent permeability function
-     */
+    // We return the updated permeability
     template<class ElementSolution>
     PermeabilityType permeability(const Element& element,
                         const SubControlVolume& scv,
@@ -149,16 +118,11 @@ public:
         return permLaw_.evaluatePermeability(referencePermeability_, referencePorosity_, poro);
     }
 
-    // return the brooks-corey context depending on the position
+    // Return the brooks-corey context depending on the position
     const MaterialLawParams& materialLawParamsAtPos(const GlobalPosition& globalPos) const
     { return materialParams_; }
 
-    /*!
-     * \brief Function for defining which phase is to be considered as the wetting phase.
-     *
-     * \return the wetting phase index
-     * \param globalPos The position of the center of the element
-     */
+    // Define the wetting phase
     template<class FluidSystem>
     int wettingPhaseAtPos(const GlobalPosition& globalPos) const
     { return FluidSystem::H2OIdx; }
@@ -166,7 +130,6 @@ public:
 private:
 
     MaterialLawParams materialParams_;
-
     using ModelTraits = GetPropType<TypeTag, Properties::ModelTraits>;
     using PorosityLaw = PorosityPrecipitation<Scalar, ModelTraits::numFluidComponents(), SolidSystem::numComponents - SolidSystem::numInertComponents>;
     PorosityLaw poroLaw_;
