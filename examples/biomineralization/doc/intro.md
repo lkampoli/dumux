@@ -54,7 +54,7 @@ A pore-scale sketch of the most important processes of MICP is shown
 in the Figure.
 
 
-![](./pore-scale_w_processes_named.png)
+![](./pore_scale_w_processes_named.png)
 
 
 A major difficulty for practical engineering applications of
