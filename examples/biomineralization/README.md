@@ -17,13 +17,13 @@ and can be applied, for example, to cut off highly permeable pathways such as
 fractures, faults, or behind-casing defects in boreholes within a geological
 formation, e.g. [@Phillips2013a].
 
-The bacterium used, S.~pasteurii,
+The bacterium used, $`\textit{S.~pasteurii}`$,
 expresses the enzyme urease that catalyzes the hydrolysis reaction of
 urea (CO(NH<sub>2</sub>)<sub>2</sub>) into ammonia (NH<sub>3</sub>) and carbon
 dioxide (CO<sub>2</sub>):
 
 ```math
-\mathrm{CO(NH_2)_2} + 2\mathrm{H_2O} \xrightarrow{urease}%\longrightarrow
+\mathrm{CO(NH_2)_2} + 2\mathrm{H_2O} \xrightarrow{urease}
 2\mathrm{NH_{3}} + \mathrm{H_2CO_{3}}.
 ```
 
@@ -32,18 +32,17 @@ Thus, the ureolysis reaction leads to an increase in pH until the pH is equal to
 This shifts the
 carbonate balance in an aqueous solution toward higher concentrations of
 dissolved carbonate.
-Adding calcium to the system then results
-in the precipitation of calcium carbonate:
+Adding calcium to the system then results in the precipitation of calcium carbonate:
 
 ```math
-CO_{3}^{2-} + Ca^{2+} -> CaCO_3 \downarrow}.
+\mathrm{CO_{3}^{2-}} + \mathrm{Ca^{2+}} \longrightarrow \mathrm{CaCO_3 \downarrow}.
 ```
 
 The resulting overall MICP reaction equation is:
+
 ```math
-\mathrm{CO(NH_2)_2} + 2\mathrm{H_2O} + \mathrm{Ca^{2+}} \xrightarrow{urease}%\longrightarrow
+\mathrm{CO(NH_2)_2} + 2\mathrm{H_2O} + \mathrm{Ca^{2+}} \xrightarrow{urease}
 2\mathrm{NH_{4}^{+}} + \mathrm{CaCO_{3}} \downarrow.
-\label{eq:MICP_chem_reaction}
 ```
 
 In a porous medium, this process,
@@ -54,16 +53,11 @@ A pore-scale sketch of the most important processes of MICP is shown
 in the Figure.
 
 
-![](./pore_scale_w_processes_named.png)
+![](./img/pore_scale_w_processes_named.png)
 
 
-A major difficulty for practical engineering applications of
-MICP is the predictive planning of its use and impact,
-since it involves a number of complex interacting processes.
-While the basic chemistry and the flow processes are known, it is the exact
-quantitative description of the interactions and, in particular, the influence
-of the biofilm and the developing precipitates
-that pose challenges to achieving predictability.
+A major difficulty for practical engineering applications of MICP is the predictive planning of its use and impact, since it involves a number of complex interacting processes.
+While the basic chemistry and the flow processes are known, it is the exact quantitative description of the interactions and, in particular, the influence of the biofilm and the developing precipitates that pose challenges to achieving predictability.
 
 
 However, for the sake of simplicity, the dissociation processes are not modeled in this example and it
@@ -73,27 +67,20 @@ is assumed that the system has reached a steady state were the calcite precipita
 The conceptual model for biomineralization follows the one presented by [@Ebigbo2012] and [@Hommel2015].
 It accounts for two-phase multi-component reactive transport on the continuum scale, including biofilm and calcite as solid phases.
 The reactions considered are pH-dependent dissociation reactions, microbial growth, and decay as well as microbially catalyzed ureolysis and mass-transfer reactions between the different phases.
-A mass transfer may occur between both fluid phases by the mutual dissolution of
-water and CO<sub>2</sub> in the gas or the aqueous phase. It may also occur between
-the aqueous phase and the two *solid* phases,
-biofilm and calcite denoted by subscripts (f) and (c) respectively, by attachment or
+A mass transfer may occur between both fluid phases by the mutual dissolution of water and CO<sub>2</sub> in the gas or the aqueous phase. It may also occur between
+the aqueous phase and the two *solid* phases, biofilm and calcite denoted by subscripts (f) and (c) respectively, by attachment or
 detachment of biomass and precipitation or dissolution of calcite.
 
-The mobile components, denoted by superscripts k, are water (w),
-dissolved inorganic carbon ($$\mathrm{C<sub>tot</sub>}$$),
-sodium (Na), chloride (Cl), calcium (Ca), urea (u),
-substrate (s), oxygen (O<sub>2</sub>), and suspended biomass (b).
-A substrate is the carbon and energy source of the bacteria
-and O<sub>2</sub> is the electron acceptor.
+The mobile components, denoted by superscripts k, are water (w), dissolved inorganic carbon (C<sub>tot</sub>),
+sodium (Na), chloride (Cl), calcium (Ca), urea (u), substrate (s), oxygen (O<sub>2</sub>), and suspended biomass (b).
+A substrate is the carbon and energy source of the bacteria and O<sub>2</sub> is the electron acceptor.
 
 
-The primary variables solved are the aqueous-phase pressure $`p_\mathrm{w}`$,
-mole fractions $` \textbf v `$ $`x^\kappa_\mathrm{w}``$ of component k in the water phase, and
+The primary variables solved are the aqueous-phase pressure $`p_\mathrm{w}`$, mole fractions $` \textbf v `$ $`x^\kappa_\mathrm{w}`$ of component k in the water phase, and
 for the solid phases biofilm and calcite, volume fractions $`\phi_\lambda `$ .
-However, the CO<sub>2</sub>-phase saturation is used as the primary variable instead of the mole fraction of total inorganic carbon in water $`x^\mathrm{C_{tot}}_\mathrm{w}$$
-whenever both fluid phases are present within the same control volume [@Class2002].
-All reactive and mass-transfer processes are incorporated in the mass balance equations for the components
-by component-specific source and sink terms:
+However, the CO<sub>2</sub>-phase saturation is used as the primary variable instead of the mole fraction of total inorganic carbon in water $`x^\mathrm{C_{tot}}_\mathrm{w}`$
+whenever both fluid phases are present within the same control volume ([@Class2002]).
+All reactive and mass-transfer processes are incorporated in the mass balance equations for the components by component-specific source and sink terms:
 
 ```math
 \sum\limits_{\alpha} \left[\frac{\partial}{\partial t}\left(\phi \rho_\mathrm{\alpha,\,mol} x^\kappa_\alpha S_\alpha \right) + \nabla\cdotp \left(\rho_\mathrm{\alpha,\,mol} x^\kappa_\alpha \mathbf{v}_\alpha \right) - \nabla\cdotp \left(\rho_\mathrm{\alpha,\,mol} \mathbf{D}^\kappa_\mathrm{pm,\alpha} \nabla x^\kappa_\alpha \right) \right] = q^\kappa,\:\alpha\in \mathrm{\{n;w\}} .
@@ -102,8 +89,8 @@ by component-specific source and sink terms:
 
 Here, $`t`$ is time, $`\phi`$ porosity, $`\rho_\mathrm{\alpha,\,mol}`$, $`S_\alpha`$,
 and $`\mathbf{v}_\alpha`$ the molar density, saturation and the velocity of phase $`\alpha`$ respectively,
-$$x^\kappa_\alpha`$ the mole fraction of component k in phase $`\alpha `$ .
-$$\mathbf{D}_\mathrm{pm,\alpha}`$ is the dispersion tensor of phase $`\alpha`$ in the porous medium,and $`q^\kappa`$ is the source term of component k due to biochemical reactions. However, all components except water, CO<sub>2</sub> , and O<sub>2</sub> are assumed to be restricted to the water phase.
+$`x^\kappa_\alpha`$ the mole fraction of component k in phase $`\alpha `$ .
+$`\mathbf{D}_\mathrm{pm,\alpha}`$ is the dispersion tensor of phase $`\alpha`$ in the porous medium,and $`q^\kappa`$ is the source term of component k due to biochemical reactions. However, all components except water, CO<sub>2</sub> , and O<sub>2</sub> are assumed to be restricted to the water phase.
 
 The mass balances for the solid phases calcite and biofilm contain
 only a storage and source term since they are immobile:
@@ -128,7 +115,7 @@ Thus, the reactive source terms for water $`q^\mathrm{w}`$, sodium $`q^\mathrm{N
 
 ```math
 q^\mathrm{w} =   q^\mathrm{Na} = q^\mathrm{Cl} = 0
-tag{3}
+\tag{3}
 ```
 
 ## Urea and total nitrogen
@@ -147,7 +134,7 @@ q^\mathrm{N_{tot}}=2r_\mathrm{urea},
 
 where $`r_\mathrm{urea}`$ is the ureolysis rate calculated according to [@Lauchnor2015],
 who investigated the influences of urea,
-NH<sup>4+</sup>, cell concentration, and pH of the medium on the ureolysis of whole cells of $`\textit{S.~pasteurii} $`:
+NH<sup>4+</sup>, cell concentration, and pH of the medium on the ureolysis of whole cells of $`\textit{S.~pasteurii}`$:
 
 ```math
 r_\mathrm{urea} = k_\mathrm{urease}
@@ -178,10 +165,10 @@ q^\mathrm{c} = - r_\mathrm{diss} + r_\mathrm{prec}.
 Here, $`r_\mathrm{diss}`$ is the rate of calcite dissolution and $`r_\mathrm{prec}`$ the rate of calcite precipitation.
 Both reaction rates are calculated as follows, depending on the interfacial area available for the reaction
 as well as the saturation index $`\Omega`$ and, in the case of the dissolution, additionally on the molality of H<sup>+</sup>.
-The precipitation rate of calcite is calculated as:
+The precipitation rate of calcite $`\Omega\ge1`$ is calculated as:
 
 ```math
-r_\mathrm{prec} = k_\mathrm{prec}A_\mathrm{sw}\left(\Omega-1\right)^{n_\mathrm{prec}};\:\text{for}\: \Omega\ge1,
+r_\mathrm{prec} = k_\mathrm{prec}A_\mathrm{sw}\left(\Omega-1\right)^{n_\mathrm{prec}},
 ```
 ```math
 A_\mathrm{sw} = A_\mathrm{sw,0}\left( 1-\frac{\phi_\mathrm{c}}{\phi_0} \right)^\frac{2}{3},
@@ -197,17 +184,16 @@ $`K_\mathrm{sp}`$ the calcite solubility product and
 $`m^\mathrm{Ca^{2+}}`$ and $`m^\mathrm{CO_3^{2-}}`$ the molalities of calcium and carbonate respectively.
 The activity coefficients $`\gamma^\kappa`$ are calculated using
 Pitzer equations.
-The dissolution rate of calcite is calculated as:
+The dissolution rate of calcite for $`\Omega<1`$ is calculated as:
 
 ```math
-r_\mathrm{diss} = \left(k_\mathrm{diss,1}m^\mathrm{H^{+}}+
-k_\mathrm{diss,2}\right)A_\mathrm{cw}\left(\Omega-1\right)^{n_\mathrm{diss}};\:\text{for}\: \Omega<1,
+r_\mathrm{diss} = \left(k_\mathrm{diss,1}m^\mathrm{H^{+}}+k_\mathrm{diss,2}\right)A_\mathrm{cw}\left(\Omega-1\right)^{n_\mathrm{diss}},
 ```
 ```math
 A_\mathrm{cw} = \mathrm{min} \left(A_\mathrm{sw}, a_\mathrm{c}\phi_\mathrm{c}\right),
 ```
 
-where $`k_\mathrm{diss,1}`$, $`k_\mathrm{diss,2}`$, and $`n_\mathrm{diss}`$ are dissolution parameters [@Chou1989, Compton1989]
+where $`k_\mathrm{diss,1}`$, $`k_\mathrm{diss,2}`$, and $`n_\mathrm{diss}`$ are dissolution parameters ([@Chou1989], [@Compton1989])
 and $`a_\mathrm{c}`$ is the specific surface area and $`\phi_\mathrm{c}`$ the volume fraction of calcite.
 
 However, in the present simplified chemistry system, dissolution is neglected, $`r_\mathrm{diss}=0`$,
@@ -218,7 +204,7 @@ it is assumed that the system has reached a steady state, were precipitation rat
 r_\mathrm{prec} = r_\mathrm{urea}
 ```
 
-## Dissolved inorganic carbon}\label{sec:source_ctot}
+## Dissolved inorganic carbon
 Dissolved inorganic carbon is generated by the hydrolysis of urea
 as well as by the dissolution of calcite while it is consumed by the precipitation of calcite.
 Thus, the source term of dissolved inorganic carbon $`q^\mathrm{C_{tot}}`$ results in:
@@ -238,15 +224,12 @@ attachment and detachment describing the transfer of biomass from the suspended 
 ```math
 q^\mathrm{b} = \frac{r^\mathrm{b}_\mathrm{g} - r^\mathrm{b}_\mathrm{b} - r_\mathrm{a} + r_\mathrm{d}}{M^\mathrm{b}},
 ```
-
 ```math
 q^\mathrm{f} = \frac{r^\mathrm{f}_\mathrm{g} - r^\mathrm{f}_\mathrm{b} + r_\mathrm{a} - r_\mathrm{d}}{M^\mathrm{f}}
 ```
 
-where $`r^\mathrm{b}_\mathrm{g}`$ is the growth rate and $`r^\mathrm{b}_\mathrm{b}`$ the decay rate of suspended biomass,
-$`r_\mathrm{a}`$ the attachment rate, $`r_\mathrm{d}`$ the detachment rate and
-$`M^\mathrm{b}`$ the molar mass of biomass to convert the rates in the units
-from mass to moles per volume and time.
+where $`r^\mathrm{b}_\mathrm{g}`$ is the growth rate and $`r^\mathrm{b}_\mathrm{b}`$ the decay rate of suspended biomass, $`r_\mathrm{a}`$ the attachment rate, $`r_\mathrm{d}`$ the detachment rate and
+$`M^\mathrm{b}`$ the molar mass of biomass to convert the rates in the units from mass to moles per volume and time.
 Accordingly, $`r^\mathrm{f}_\mathrm{g}`$ and $`r^\mathrm{f}_\mathrm{b}`$ are the growth and decay of biofilm
 and $`M^\mathrm{f}`$ is the molar mass of biofilm.
 All rates influencing both attached and suspended biomass are assumed to be of a first-order type, where
@@ -264,8 +247,7 @@ r_\mathrm{g}^\mathrm{b} = \mu_\mathrm{g} C_\mathrm{w}^\mathrm{b}S_\mathrm{w}\phi
 ```math
   r_\mathrm{g}^\mathrm{f} = \mu_\mathrm{g} \phi_\mathrm{f}\rho_\mathrm{f},
 ```
-with the specific growth rate $`\mu_\mathrm{g}$.
-`$\mu_\mathrm{g}`$ is calculated using double Monod kinetics to reproduce the dependency of
+with the specific growth rate $`\mu_\mathrm{g}`$. $`$\mu_\mathrm{g}`$ is calculated using double Monod kinetics to reproduce the dependency of
 the microbial growth on both substrate and oxygen.
 
 ```math
@@ -274,19 +256,16 @@ the microbial growth on both substrate and oxygen.
  \frac{C_\mathrm{w}^\mathrm{O_2}}{K_\mathrm{O_2} + C_\mathrm{w}^\mathrm{O_2}}.
 ```
 
-Here, $`k_\mathrm{\mu}`$ is the maximum specific growth rate, according to [@Connolly2014],
-`$Y`$ the yield coefficient expressing the ratio of biomass generated to the mass of substrate consumed.
-`$C_\mathrm{w}^\mathrm{s}`$ and $`C_\mathrm{w}^\mathrm{O_2}`$
-are the mass concentrations of substrate and oxygen in the water phase and
-`$K_\mathrm{s}`$ and  $`K_\mathrm{O_2}`$
-are the half-saturation coefficients for substrate and oxygen respectively.
+Here, $`k_\mathrm{\mu}`$ is the maximum specific growth rate, according to [@Connolly2014], $`$Y`$ the yield coefficient expressing the ratio of
+biomass generated to the mass of substrate consumed.
+$`C_\mathrm{w}^\mathrm{s}`$ and $`C_\mathrm{w}^\mathrm{O_2}`$ are the mass concentrations of substrate and oxygen in the water phase and
+$`K_\mathrm{s}`$ and  $`K_\mathrm{O_2}`$ are the half-saturation coefficients for substrate and oxygen respectively.
 
 The decay rates are calculated similarly to the growth rates:
 
 ```math
 r_\mathrm{b}^\mathrm{b} = k_\mathrm{b}^\mathrm{b} C_\mathrm{w}^\mathrm{b}S_\mathrm{w}\phi,
 ```
-
 ```math
  r_\mathrm{b}^\mathrm{f} =  k_\mathrm{b}^\mathrm{f}\phi_\mathrm{f}\rho_\mathrm{f},
 ```
@@ -297,16 +276,15 @@ take different processes into account, increasing inactivation.
 For suspended biomass, non-optimal, acidic pH is assumed to increase inactivation:
 
 ```math
-k_\mathrm{b}^\mathrm{b} = b_0 \left(1 + \frac{K_\mathrm{pH}}{m_\mathrm{H^{+}} ^2} \right),
+k_\mathrm{b}^\mathrm{b}=b_0\left(1+\frac{K_\mathrm{pH}}{m_\mathrm{H^{+}}^2}\right),
 ```
 
-where $`b_0`$ is the endogenous decay rate
-and $`K_\mathrm{pH}`$ accounts for increased cell inactivation at low pH.
+where $`b_0`$ is the endogenous decay rate and $`K_\mathrm{pH}`$ accounts for increased cell inactivation at low pH.
 High pH is assumed not to influence the inactivation of suspended biomass, as S. pasteurii is alkaliphile.
 On the contrary, attached cells are protected from harsh environmental conditions and the presence of CO<sub>2</sub> within the biofilm
 by protective mechanisms such as extracellular polymers [@Mitchell2008].
 However, as calcite precipitates mainly in or close to the biofilm, cells may be covered with calcite precipitates
-or disrupted by crystals inactivating the affected cells [@Dupraz2009a, Whiffin2007].
+or disrupted by crystals inactivating the affected cells ([@Dupraz2009a] and [@Whiffin2007]).
 Consequently, the precipitation rate is assumed to increase the specific decay rate of attached biomass:
 
 ```math
@@ -327,8 +305,7 @@ r_\mathrm{a}= k_\mathrm{a} C^\mathrm{b}_\mathrm{w} \phi S_\mathrm{w},
 ```
 
 where $`k_\mathrm{a}`$ is the specific attachment rate.
-It is considered to
-consist of two terms, $`c_\mathrm{a,1}\phi_\mathrm{f}`$ and $`c_\mathrm{a,2}$,
+It is considered to consist of two terms, $`c_\mathrm{a,1}\phi_\mathrm{f}`$ and $`c_\mathrm{a,2}`$,
 whose coefficient $`c_\mathrm{a,1}`$ accounts for preferential attachment to existing biofilm
 while $`c_\mathrm{a,2}`$ accounts for the unspecific attachment to arbitrary surfaces:
 
@@ -352,6 +329,8 @@ where $`r_\mathrm{d}`$ is the rate of detachment and $`k_\mathrm{d}`$ the detach
 ```math
 k_\mathrm{d}=c_\mathrm{d}
 \left( \phi S_\mathrm{w} \left|\nabla p_\mathrm{w} -  \rho_\mathrm{w} \mathbf{g} \right| \right)^{0.58}
+```
+```math
 + \frac{\phi_\mathrm{f}}{\phi_0-\phi_\mathrm{c}} \mu_\mathrm{g}.
 ```
 
@@ -432,19 +411,21 @@ Using this file, in the `problem.hh`, it is also determined which type of soluti
 
 
 
-
+[@Phillips2013a]: https://pubs.acs.org/doi/abs/10.1021/es301294q "Potential CO<sub>2</sub> leakage reduction through biofilm-induced calcium carbonate precipitation"
 [@Batzle1992]: https://library.seg.org/doi/10.1190/1.1443207  "Seismic Properties of Pore Fluids"
 [@Class2002]: https://www.sciencedirect.com/science/article/pii/S0309170802000155 "Numerical simulation of non-isothermal multiphase multicomponent processes in porous media. 2. Applications for the injection of steam and air"
 [@Connolly2014]: http://www.ncbi.nlm.nih.gov/pubmed/23835134 "Construction of two ureolytic model organisms for the study of microbially induced calcium carbonate precipitation"
 [@Duan2003]: https://www.sciencedirect.com/science/article/pii/S0009254102002632 "An improved model calculating CO<sub>2</sub> solubility in pure water and aqueous NaCl solutions from 273 to 533 K and from 0 to 2000 bar"
+[@Chou1989]: https://www.sciencedirect.com/science/article/pii/0009254189900636 "Comparative study of the kinetics and mechanisms of dissolution of carbonate minerals"
+[@Compton1989]: https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1365-2427.1989.tb01101.x "The dissolution of calcite in acid waters: Mass transport versus surface control"
 [@Dupraz2009a]: http://linkinghub.elsevier.com/retrieve/pii/S0009254109002265 "Experimental and numerical modeling of bacterially induced pH increase and calcite precipitation in saline aquifers"
+[@Whiffin2007]: https://www.tandfonline.com/doi/full/10.1080/01490450701436505 "Microbial Carbonate Precipitation as a Soil Improvement Technique"
 [@Ebigbo2012]: https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2011WR011714 "Darcy-scale modeling of microbially induced carbonate mineral precipitation in sand columns"
 [@Fenghour1998]: https://aip.scitation.org/doi/10.1063/1.556013 "The Viscosity of Carbon Dioxide"
 [@Hommel2015]: https://agupubs.onlinelibrary.wiley.com/doi/full/10.1002/2014WR016503 "A revised model for microbially induced calcite precipitation: Improvements	and new insights based on recent experiments"
 [@Lauchnor2015]: http://dx.doi.org/10.1111/jam.12804 "Whole cell kinetics of ureolysis by Sporosarcina pasteurii"
 [@Mitchell2008]: https://www.sciencedirect.com/science/article/pii/S0896844608002040 "Resilience of planktonic and biofilm cultures to supercritical CO<sub>2</sub>"
 [@Span1996]: https://aip.scitation.org/doi/abs/10.1063/1.555991 "A new equation of state for carbon dioxide covering the fluid region from the triple-point temperature to 1100 K at pressures up to 800 MPa"
-
 
 ## The file `main.cc`
 
@@ -2942,4 +2923,4 @@ The phase heat capacity
 
 The simplified chemistry model for biomineralization produces e.g. the following results for the solid phases' volume fractions after running for a simulated time of 100000s:
 
- ![](resultsVolFracsOverLength100000s.png)
+ ![](./img/results_volfracs_over_length_100000s.png)
