@@ -60,7 +60,8 @@ class MICPColumnProblemSimpleChemistry;
 namespace Properties
 {
 // We define the CO2 tables used as a new property to be used for the Fluidsystem
-NEW_PROP_TAG(CO2Tables);
+template<class TypeTag, class MICPColumnProblemSimpleChemistry>
+struct CO2Tables { using type = UndefinedProperty;  };
 
 // We create new type tag for our simulation which inherits from the 2pncmin model and the box discretization
 namespace TTag {
@@ -77,7 +78,8 @@ template<class TypeTag>
 struct Problem<TypeTag, TTag::MICPColumnSimpleChemistryTypeTag> { using type = MICPColumnProblemSimpleChemistry<TypeTag>; };
 
 // We set the CO2 tables used for our simulation
-SET_TYPE_PROP(MICPColumnSimpleChemistryTypeTag, CO2Tables, Dumux::ICP::CO2Tables);
+template<class TypeTag>
+struct CO2Tables<TypeTag, TTag::MICPColumnSimpleChemistryTypeTag> { using type = Dumux::ICP::CO2Tables; };
 
 // We set the fluidSystem  used for our simulation
 template<class TypeTag>
