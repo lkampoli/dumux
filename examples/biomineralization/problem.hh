@@ -39,7 +39,7 @@
 // We include the necessary material files
 #include <examples/biomineralization/material/fluidsystems/biominsimplechemistry.hh>
 #include <examples/biomineralization/material/solidsystems/biominsolids.hh>
-#include <examples/biomineralization/material/components/ammonia.hh>
+#include <dumux/material/components/ammonia.hh>
 #include <dumux/material/binarycoefficients/brine_co2.hh>
 #include <examples/biomineralization/material/co2tableslaboratory.hh>
 
@@ -135,7 +135,7 @@ class MICPColumnProblemSimpleChemistry : public PorousMediumFlowProblem<TypeTag>
         xwCaIdx = FluidSystem::CaIdx,
         xwUreaIdx = FluidSystem::UreaIdx,
         xwO2Idx = FluidSystem::O2Idx,
-        xwBiosubIdx = FluidSystem::BiosubIdx,
+        xwBiosubIdx = FluidSystem::GlucoseIdx,
         xwBiosuspIdx = FluidSystem::BiosuspIdx,
         phiBiofilmIdx = numComponents,
         phiCalciteIdx = numComponents + 1,
@@ -148,7 +148,7 @@ class MICPColumnProblemSimpleChemistry : public PorousMediumFlowProblem<TypeTag>
         CaIdx = FluidSystem::CaIdx,
         UreaIdx = FluidSystem::UreaIdx,
         O2Idx = FluidSystem::O2Idx,
-        BiosubIdx = FluidSystem::BiosubIdx,
+        BiosubIdx = FluidSystem::GlucoseIdx,
         BiosuspIdx = FluidSystem::BiosuspIdx,
 
         wPhaseIdx = FluidSystem::wPhaseIdx,

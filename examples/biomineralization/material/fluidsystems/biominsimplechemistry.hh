@@ -34,12 +34,12 @@
 #include <dumux/material/components/h2o.hh>
 #include <dumux/material/components/tabulatedcomponent.hh>
 #include <dumux/material/components/co2tablereader.hh>
-#include <examples/biomineralization/material/components/sodiumion.hh>
-#include <examples/biomineralization/material/components/chlorideion.hh>
+#include <dumux/material/components/sodiumion.hh>
+#include <dumux/material/components/chlorideion.hh>
 #include <dumux/material/components/calciumion.hh>
-#include <examples/biomineralization/material/components/urea.hh>
+#include <dumux/material/components/urea.hh>
 #include <dumux/material/components/o2.hh>
-#include <examples/biomineralization/material/components/substrate.hh>
+#include <dumux/material/components/glucose.hh>
 #include <examples/biomineralization/material/components/suspendedbiomass.hh>
 
 // we include brine-co2 and h2o-co2 binary coefficients
@@ -80,7 +80,7 @@ public:
     using Ca = Components::CalciumIon<Scalar>;
     using Urea = Components::Urea<Scalar>;
     using O2 = Components::O2<Scalar>;
-    using Biosub = Components::Substrate<Scalar>;
+    using Glucose = Components::Glucose<Scalar>;
     using Biosusp = Components::SuspBiomass<Scalar>;
 
     using Brine_CO2 = BinaryCoeff::Brine_CO2<Scalar, CO2Table, true>;
@@ -156,7 +156,7 @@ public:
     static const int CaIdx  = 4;
     static const int UreaIdx  = 5;
     static const int O2Idx  = 6;
-    static const int BiosubIdx  = 7;
+    static const int GlucoseIdx  = 7;
     static const int BiosuspIdx  = 8;
 
     // The component names
@@ -170,7 +170,7 @@ public:
         case NaIdx: return Na::name();
         case ClIdx: return Cl::name();
         case BiosuspIdx: return Biosusp::name();
-        case BiosubIdx: return Biosub::name();
+        case GlucoseIdx: return Glucose::name();
         case O2Idx: return O2::name();
         case UreaIdx: return Urea::name();
         break;
@@ -191,7 +191,7 @@ public:
         case NaIdx: return Na::molarMass();break;
         case ClIdx: return Cl::molarMass();break;
         case BiosuspIdx: return Biosusp::molarMass();break;
-        case BiosubIdx: return Biosub::molarMass();break;
+        case GlucoseIdx: return Glucose::molarMass();break;
         case O2Idx: return O2::molarMass();break;
         case UreaIdx: return Urea::molarMass();break;
         default: DUNE_THROW(Dune::InvalidStateException, "Invalid component index " << compIdx);break;

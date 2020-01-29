@@ -18,8 +18,8 @@
  *****************************************************************************/
 
 // the header guard
-#ifndef DUMUX_BIOSUB_HH
-#define DUMUX_BIOSUB_HH
+#ifndef DUMUX_GLUCOSE_HH
+#define DUMUX_GLUCOSE_HH
 
 // including the base component
 #include <dumux/material/components/base.hh>
@@ -27,15 +27,15 @@
 namespace Dumux {
 namespace Components {
 
-// In Substrate, we define the properties of the component substrate, which is the energy and carbon source for biomass growth
+// In Glucose, we define the properties of the component glucose, which is the energy and carbon source for biomass growth
 template <class Scalar>
-class Substrate
-: public Components::Base<Scalar, Substrate<Scalar> >
+class Glucose
+: public Components::Base<Scalar, Glucose<Scalar> >
 {
 public:
     // the name
     static std::string name()
-    { return "Substrate"; }
+    { return "Glucose"; }
 
     // the molar mass, using the molar mass of glucose
     static Scalar molarMass()

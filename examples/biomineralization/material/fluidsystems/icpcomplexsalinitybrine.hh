@@ -27,8 +27,8 @@
 // we include all necessary solid components
 #include <dumux/material/constants.hh>
 #include <dumux/material/components/h2o.hh>
-#include <examples/biomineralization/material/components/sodiumion.hh>
-#include <examples/biomineralization/material/components/chlorideion.hh>
+#include <dumux/material/components/sodiumion.hh>
+#include <dumux/material/components/chlorideion.hh>
 #include <dumux/material/components/calciumion.hh>
 #include <dumux/material/components/tabulatedcomponent.hh>
 
