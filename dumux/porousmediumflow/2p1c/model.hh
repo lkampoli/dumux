@@ -180,14 +180,18 @@ private:
     using FST = GetPropType<TypeTag, Properties::FluidState>;
     using SSY = GetPropType<TypeTag, Properties::SolidSystem>;
     using SST = GetPropType<TypeTag, Properties::SolidState>;
-    using MT = GetPropType<TypeTag, Properties::ModelTraits>;
     using PT = typename GetPropType<TypeTag, Properties::SpatialParams>::PermeabilityType;
+    using MT = GetPropType<TypeTag, Properties::ModelTraits>;
+    static constexpr auto DM = GetPropType<TypeTag, Properties::GridGeometry>::discMethod;
+    static constexpr bool enableIS = getPropValue<TypeTag, Properties::EnableBoxInterfaceSolver>();
+    // class used for scv-wise reconstruction of non-wetting phase saturations
+    using SR = TwoPScvSaturationReconstruction<DM, enableIS>;
     using ETCM = GetPropType< TypeTag, Properties:: ThermalConductivityModel>;
 
     static_assert(FSY::numComponents == 1, "Only fluid systems with 1 component are supported by the 2p1cni model!");
     static_assert(FSY::numPhases == 2, "Only fluid systems with 2 phases are supported by the 2p1cni model!");
 
-    using Traits = TwoPOneCNIVolumeVariablesTraits<PV, FSY, FST, SSY, SST, PT, MT, ETCM>;
+    using Traits =  AddThermalConductivityModel<ETCM, TwoPVolumeVariablesTraits<PV, FSY, FST, SSY, SST, PT, MT, SR>>;
 public:
     using type = TwoPOneCVolumeVariables<Traits>;
 };

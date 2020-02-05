@@ -143,17 +143,20 @@ private:
     using FST = GetPropType<TypeTag, Properties::FluidState>;
     using SSY = GetPropType<TypeTag, Properties::SolidSystem>;
     using SST = GetPropType<TypeTag, Properties::SolidState>;
-    using MT = GetPropType<TypeTag, Properties::ModelTraits>;
     using PT = typename GetPropType<TypeTag, Properties::SpatialParams>::PermeabilityType;
+    using MT = GetPropType<TypeTag, Properties::ModelTraits>;
+    static constexpr auto DM = GetPropType<TypeTag, Properties::GridGeometry>::discMethod;
+    static constexpr bool enableIS = getPropValue<TypeTag, Properties::EnableBoxInterfaceSolver>();
+    // class used for scv-wise reconstruction of non-wetting phase saturations
+    using SR = TwoPScvSaturationReconstruction<DM, enableIS>;
     using DT = GetPropType<TypeTag, Properties::MolecularDiffusionType>;
     using EDM = GetPropType<TypeTag, Properties::EffectiveDiffusivityModel>;
 
     static_assert(FSY::numComponents == 2, "Only fluid systems with 2 components are supported by the 2p2c model!");
     static_assert(FSY::numPhases == 2, "Only fluid systems with 2 phases are supported by the 2p2c model!");
 
+    using Traits = AddDiffusionType<DT, EDM, TwoPVolumeVariablesTraits<PV, FSY, FST, SSY, SST, PT, MT, SR>>;
     static constexpr bool useConstraintSolver = getPropValue<TypeTag, Properties::UseConstraintSolver>();
-
-    using Traits = TwoPNCVolumeVariablesTraits<PV, FSY, FST, SSY, SST, PT, MT, DT, EDM>;
 public:
     using type = TwoPTwoCVolumeVariables<Traits, useConstraintSolver>;
 };
@@ -186,13 +189,18 @@ private:
     using FST = GetPropType<TypeTag, Properties::FluidState>;
     using SSY = GetPropType<TypeTag, Properties::SolidSystem>;
     using SST = GetPropType<TypeTag, Properties::SolidState>;
-    using MT = GetPropType<TypeTag, Properties::ModelTraits>;
     using PT = typename GetPropType<TypeTag, Properties::SpatialParams>::PermeabilityType;
+    using MT = GetPropType<TypeTag, Properties::ModelTraits>;
+    static constexpr auto DM = GetPropType<TypeTag, Properties::GridGeometry>::discMethod;
+    static constexpr bool enableIS = getPropValue<TypeTag, Properties::EnableBoxInterfaceSolver>();
+    // class used for scv-wise reconstruction of non-wetting phase saturations
+    using SR = TwoPScvSaturationReconstruction<DM, enableIS>;
     using DT = GetPropType<TypeTag, Properties::MolecularDiffusionType>;
     using EDM = GetPropType<TypeTag, Properties::EffectiveDiffusivityModel>;
     using ETCM = GetPropType< TypeTag, Properties:: ThermalConductivityModel>;
 
-    using Traits = TwoPNCNIVolumeVariablesTraits<PV, FSY, FST, SSY, SST, PT, MT, DT, EDM, ETCM>;
+    using NCTraits = AddDiffusionType<DT, EDM, TwoPVolumeVariablesTraits<PV, FSY, FST, SSY, SST, PT, MT, SR>>;
+    using Traits = AddThermalConductivityModel<ETCM, NCTraits>;
 public:
     using type = TwoPTwoCVolumeVariables<Traits>;
 };
@@ -281,14 +289,17 @@ private:
     using FST = GetPropType<TypeTag, Properties::FluidState>;
     using SSY = GetPropType<TypeTag, Properties::SolidSystem>;
     using SST = GetPropType<TypeTag, Properties::SolidState>;
-    using MT = GetPropType<TypeTag, Properties::ModelTraits>;
     using PT = typename GetPropType<TypeTag, Properties::SpatialParams>::PermeabilityType;
+    using MT = GetPropType<TypeTag, Properties::ModelTraits>;
+    static constexpr auto DM = GetPropType<TypeTag, Properties::GridGeometry>::discMethod;
+    static constexpr bool enableIS = getPropValue<TypeTag, Properties::EnableBoxInterfaceSolver>();
+    // class used for scv-wise reconstruction of non-wetting phase saturations
+    using SR = TwoPScvSaturationReconstruction<DM, enableIS>;
     using DT = GetPropType<TypeTag, Properties::MolecularDiffusionType>;
     using EDM = GetPropType<TypeTag, Properties::EffectiveDiffusivityModel>;
 
+    using Traits = AddDiffusionType<DT, EDM, TwoPVolumeVariablesTraits<PV, FSY, FST, SSY, SST, PT, MT, SR>>;
     static constexpr bool useConstraintSolver = getPropValue<TypeTag, Properties::UseConstraintSolver>();
-
-    using Traits = TwoPNCVolumeVariablesTraits<PV, FSY, FST, SSY, SST, PT, MT, DT, EDM>;
     using EquilibriumVolVars = TwoPTwoCVolumeVariables<Traits, useConstraintSolver>;
 public:
     using type = NonEquilibriumVolumeVariables<Traits, EquilibriumVolVars>;
@@ -343,13 +354,17 @@ private:
     using SST = GetPropType<TypeTag, Properties::SolidState>;
     using MT = GetPropType<TypeTag, Properties::ModelTraits>;
     using PT = typename GetPropType<TypeTag, Properties::SpatialParams>::PermeabilityType;
+    static constexpr auto DM = GetPropType<TypeTag, Properties::GridGeometry>::discMethod;
+    static constexpr bool enableIS = getPropValue<TypeTag, Properties::EnableBoxInterfaceSolver>();
+    // class used for scv-wise reconstruction of non-wetting phase saturations
+    using SR = TwoPScvSaturationReconstruction<DM, enableIS>;
     using DT = GetPropType<TypeTag, Properties::MolecularDiffusionType>;
     using EDM = GetPropType<TypeTag, Properties::EffectiveDiffusivityModel>;
     using ETCM = GetPropType< TypeTag, Properties:: ThermalConductivityModel>;
 
+    using NCTraits = AddDiffusionType<DT, EDM, TwoPVolumeVariablesTraits<PV, FSY, FST, SSY, SST, PT, MT, SR>>;
+    using Traits = AddThermalConductivityModel<ETCM, NCTraits>;
     static constexpr bool useConstraintSolver = getPropValue<TypeTag, Properties::UseConstraintSolver>();
-
-    using Traits = TwoPNCNIVolumeVariablesTraits<PV, FSY, FST, SSY, SST, PT, MT, DT, EDM, ETCM>;
     using EquilibriumVolVars = TwoPTwoCVolumeVariables<Traits, useConstraintSolver>;
 public:
     using type = NonEquilibriumVolumeVariables<Traits, EquilibriumVolVars>;
