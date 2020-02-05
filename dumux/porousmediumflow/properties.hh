@@ -89,6 +89,16 @@ struct SolutionDependentHeatConduction<TypeTag, TTag::PorousMediumFlow> { static
 template<class TypeTag>
 struct EnergyLocalResidual<TypeTag, TTag::PorousMediumFlow> { using type = Dumux::EnergyLocalResidual<TypeTag> ; };
 
+template<class DT, class EDM, class Traits>
+struct AddDiffusionType : public Traits
+{
+    using DiffusionType = DT;
+    using EffectiveDiffusivityModel = EDM;
+};
+
+template<class ETCM, class Traits>
+struct AddThermalConductivityModel : public Traits { using EffectiveThermalConductivityModel = ETCM;};
+
 //! Velocity output
 template<class TypeTag>
 struct VelocityOutput<TypeTag, TTag::PorousMediumFlow>

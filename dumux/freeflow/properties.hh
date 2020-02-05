@@ -50,6 +50,9 @@ struct FluxVariablesCache<TypeTag, TTag::FreeFlow> { using type = FluxVariablesC
 template<class TypeTag>
 struct FluxVariablesCacheFiller<TypeTag, TTag::FreeFlow> { using type = FluxVariablesCaching::EmptyCacheFiller; };
 
+template<class DT, class Traits>
+struct AddFreeflowDiffusionType : public Traits { using DiffusionType = DT; };
+
 //! Use Fourier's Law as default heat conduction type
 template<class TypeTag>
 struct HeatConductionType<TypeTag, TTag::FreeFlow> { using type = FouriersLaw<TypeTag>; };
