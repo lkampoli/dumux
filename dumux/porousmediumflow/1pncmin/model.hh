@@ -109,13 +109,15 @@ private:
     using SST = GetPropType<TypeTag, Properties::SolidState>;
     using MT = GetPropType<TypeTag, Properties::ModelTraits>;
     using PT = typename GetPropType<TypeTag, Properties::SpatialParams>::PermeabilityType;
+    using DT = GetPropType<TypeTag, Properties::MolecularDiffusionType>;
+    using EDM = GetPropType<TypeTag, Properties::EffectiveDiffusivityModel>;
 
     static_assert(FSY::numComponents == MT::numFluidComponents(), "Number of components mismatch between model and fluid system");
     static_assert(FST::numComponents == MT::numFluidComponents(), "Number of components mismatch between model and fluid state");
     static_assert(FSY::numPhases == MT::numFluidPhases(), "Number of phases mismatch between model and fluid system");
     static_assert(FST::numPhases == MT::numFluidPhases(), "Number of phases mismatch between model and fluid state");
-    using EDM = GetPropType<TypeTag, Properties::EffectiveDiffusivityModel>;
-    using Traits = OnePNCVolumeVariablesTraits<PV, FSY, FST, SSY, SST, PT, MT, EDM>;
+
+    using Traits =  AddDiffusionType<DT, EDM, OnePVolumeVariablesTraits<PV, FSY, FST, SSY, SST, PT, MT>>;
     using NonMinVolVars = OnePNCVolumeVariables<Traits>;
 public:
     using type = MineralizationVolumeVariables<Traits, NonMinVolVars>;
@@ -187,14 +189,17 @@ private:
     using SST = GetPropType<TypeTag, Properties::SolidState>;
     using MT = GetPropType<TypeTag, Properties::ModelTraits>;
     using PT = typename GetPropType<TypeTag, Properties::SpatialParams>::PermeabilityType;
+    using DT = GetPropType<TypeTag, Properties::MolecularDiffusionType>;
+    using EDM = GetPropType<TypeTag, Properties::EffectiveDiffusivityModel>;
+    using ETCM = GetPropType< TypeTag, Properties:: ThermalConductivityModel>;
 
     static_assert(FSY::numComponents == MT::numFluidComponents(), "Number of components mismatch between model and fluid system");
     static_assert(FST::numComponents == MT::numFluidComponents(), "Number of components mismatch between model and fluid state");
     static_assert(FSY::numPhases == MT::numFluidPhases(), "Number of phases mismatch between model and fluid system");
     static_assert(FST::numPhases == MT::numFluidPhases(), "Number of phases mismatch between model and fluid state");
-    using EDM = GetPropType<TypeTag, Properties::EffectiveDiffusivityModel>;
-    using ETCM = GetPropType< TypeTag, Properties:: ThermalConductivityModel>;
-    using Traits = OnePNCNIVolumeVariablesTraits<PV, FSY, FST, SSY, SST, PT, MT, EDM, ETCM>;
+
+    using NCTraits = AddDiffusionType<DT, EDM, OnePVolumeVariablesTraits<PV, FSY, FST, SSY, SST, PT, MT>>;
+    using Traits = AddThermalConductivityModel<ETCM, NCTraits>;
     using NonMinVolVars = OnePNCVolumeVariables<Traits>;
 public:
     using type = MineralizationVolumeVariables<Traits, NonMinVolVars>;
