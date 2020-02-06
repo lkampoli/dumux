@@ -79,6 +79,7 @@
 #include <dumux/material/fluidmatrixinteractions/diffusivitymillingtonquirk.hh>
 
 #include <dumux/porousmediumflow/properties.hh>
+#include <dumux/porousmediumflow/3p/model.hh>
 #include <dumux/porousmediumflow/nonisothermal/model.hh>
 #include <dumux/porousmediumflow/nonisothermal/indices.hh>
 #include <dumux/porousmediumflow/nonisothermal/iofields.hh>
@@ -110,32 +111,6 @@ struct ThreePWaterOilModelTraits
     static constexpr bool enableEnergyBalance() { return false; }
 
     static constexpr bool onlyGasPhaseCanDisappear() { return onlyGasPhase; }
-};
-
-/*!
- * \ingroup ThreePWaterOilModel
- * \brief Traits class for the three-phase two-component model.
- *
- * \tparam PV The type used for primary variables
- * \tparam FSY The fluid system type
- * \tparam FST The fluid state type
- * \tparam PT The type used for permeabilities
- * \tparam MT The model traits
- * \tparam EDM The effective diffusivity model
- * \tparam ETCM The effective thermal conductivity model
- */
-template<class PV, class FSY, class FST, class SSY, class SST, class PT, class MT, class EDM, class ETCM>
-struct ThreePWaterOilVolumeVariablesTraits
-{
-    using PrimaryVariables = PV;
-    using FluidSystem = FSY;
-    using FluidState = FST;
-    using SolidSystem = SSY;
-    using SolidState = SST;
-    using PermeabilityType = PT;
-    using ModelTraits = MT;
-    using EffectiveDiffusivityModel = EDM;
-    using EffectiveThermalConductivityModel = ETCM;
 };
 
 namespace Properties {
@@ -209,12 +184,14 @@ private:
     using FST = GetPropType<TypeTag, Properties::FluidState>;
     using SSY = GetPropType<TypeTag, Properties::SolidSystem>;
     using SST = GetPropType<TypeTag, Properties::SolidState>;
-    using MT = GetPropType<TypeTag, Properties::ModelTraits>;
     using PT = typename GetPropType<TypeTag, Properties::SpatialParams>::PermeabilityType;
+    using MT = GetPropType<TypeTag, Properties::ModelTraits>;
+    using DT = GetPropType<TypeTag, Properties::MolecularDiffusionType>;
     using EDM = GetPropType<TypeTag, Properties::EffectiveDiffusivityModel>;
-    using ETCM = GetPropType< TypeTag, Properties:: ThermalConductivityModel>;
+    using ETCM = GetPropType< TypeTag, Properties::ThermalConductivityModel>;
 
-    using Traits = ThreePWaterOilVolumeVariablesTraits<PV, FSY, FST, SSY, SST, PT, MT, EDM, ETCM>;
+    using NCTraits = AddDiffusionType<DT, EDM, ThreePVolumeVariablesTraits<PV, FSY, FST, SSY, SST, PT, MT>>;
+    using Traits = AddThermalConductivityModel<ETCM, NCTraits>;
 public:
     using type = ThreePWaterOilVolumeVariables<Traits>;
 };
@@ -230,13 +207,7 @@ struct UseMoles<TypeTag, TTag::ThreePWaterOilNI> { static constexpr bool value =
 
 //! Somerton is used as default model to compute the effective thermal heat conductivity
 template<class TypeTag>
-struct ThermalConductivityModel<TypeTag, TTag::ThreePWaterOilNI>
-{
-private:
-    using Scalar = GetPropType<TypeTag, Properties::Scalar>;
-public:
-    using type = ThermalConductivitySomerton<Scalar>;
-};
+struct ThermalConductivityModel<TypeTag, TTag::ThreePWaterOilNI> { using type = ThermalConductivitySomerton<GetPropType<TypeTag, Properties::Scalar>>; };
 
 //! Set the non-isothermal vkt output fields
 template<class TypeTag>
