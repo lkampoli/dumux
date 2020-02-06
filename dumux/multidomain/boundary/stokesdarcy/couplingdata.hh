@@ -920,7 +920,7 @@ protected:
      */
     Scalar diffusionCoefficientMS_(const VolumeVariables<stokesIdx>& volVars, int phaseIdx, int compIIdx, int compJIdx) const
     {
-         return volVars.effectiveDiffusivity(compIIdx, compJIdx);
+         return volVars.effectiveDiffusionCoefficient(phaseIdx, compIIdx, compJIdx);
     }
 
     /*!
@@ -932,14 +932,10 @@ protected:
         auto fluidState = volVars.fluidState();
         typename FluidSystem<darcyIdx>::ParameterCache paramCache;
         paramCache.updateAll(fluidState);
-        auto diffCoeff = FluidSystem<darcyIdx>::binaryDiffusionCoefficient(fluidState,
-                                                                            paramCache,
-                                                                            phaseIdx,
-                                                                            compIIdx,
-                                                                            compJIdx);
-        return EffDiffModel::effectiveDiffusivity(volVars,
-                                                  diffCoeff,
-                                                  phaseIdx);
+        return EffDiffModel::effectiveDiffusionCoefficient(volVars,
+                                                           phaseIdx,
+                                                           compIIdx,
+                                                           compJIdx);
     }
 
     Scalar getComponentEnthalpy(const VolumeVariables<stokesIdx>& volVars, int phaseIdx, int compIdx) const
@@ -1127,8 +1123,8 @@ protected:
                                                        domainJ,
                                                        insideDistance,
                                                        outsideDistance,
-                                                       volVarsI.effectiveDiffusivity(couplingPhaseIdx(domainI), domainICompIdx),
-                                                       volVarsJ.effectiveDiffusivity(couplingPhaseIdx(domainJ), domainJCompIdx),
+                                                       volVarsI.effectiveDiffusionCoefficient(couplingPhaseIdx(domainI), domainICompIdx, domainICompIdx),
+                                                       volVarsJ.effectiveDiffusionCoefficient(couplingPhaseIdx(domainJ), domainICompIdx, domainJCompIdx),
                                                        diffCoeffAvgType);
             diffusiveFlux[domainICompIdx] += -avgDensity * tij * deltaMassOrMoleFrac;
         }
