@@ -145,9 +145,7 @@ public:
     using type = ZeroEqVolumeVariables<Traits, NSVolVars>;
 };
 
-// \}
-}
-
+} // end properties
 } // end namespace
 
 #endif // DUMUX_ZEROEQ_MODEL_HH

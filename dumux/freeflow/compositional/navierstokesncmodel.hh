@@ -160,6 +160,10 @@ struct NormalizePressure<TypeTag, TTag::NavierStokesNC> { static constexpr bool 
 template<class TypeTag>
 struct LocalResidual<TypeTag, TTag::NavierStokesNC> { using type = FreeflowNCResidual<TypeTag>; };
 
+//! Use Fick's law for molecular diffusion per default
+template<class TypeTag>
+struct MolecularDiffusionType<TypeTag, TTag::NavierStokesNC> { using type = FicksLaw<TypeTag>; };
+
 //! Set the volume variables property
 template<class TypeTag>
 struct VolumeVariables<TypeTag, TTag::NavierStokesNC>
@@ -169,13 +173,14 @@ private:
     using FSY = GetPropType<TypeTag, Properties::FluidSystem>;
     using FST = GetPropType<TypeTag, Properties::FluidState>;
     using MT = GetPropType<TypeTag, Properties::ModelTraits>;
+    using DT = GetPropType<TypeTag, Properties::MolecularDiffusionType>;
 
     static_assert(FSY::numComponents == MT::numFluidComponents(), "Number of components mismatch between model and fluid system");
     static_assert(FST::numComponents == MT::numFluidComponents(), "Number of components mismatch between model and fluid state");
     static_assert(FSY::numPhases == MT::numFluidPhases(), "Number of phases mismatch between model and fluid system");
     static_assert(FST::numPhases == MT::numFluidPhases(), "Number of phases mismatch between model and fluid state");
 
-    using Traits = NavierStokesVolumeVariablesTraits<PV, FSY, FST, MT>;
+    using Traits = AddFreeflowDiffusionType<DT, NavierStokesVolumeVariablesTraits<PV, FSY, FST, MT>>;
 public:
     using type = FreeflowNCVolumeVariables<Traits>;
 };
@@ -203,10 +208,6 @@ private:
 public:
     using type = CompositionalFluidState<Scalar, FluidSystem>;
 };
-
-//! Use Fick's law for molecular diffusion per default
-template<class TypeTag>
-struct MolecularDiffusionType<TypeTag, TTag::NavierStokesNC> { using type = FicksLaw<TypeTag>; };
 
 //////////////////////////////////////////////////////////////////////////
 // Property values for non-isothermal multi-component free-flow model
@@ -242,9 +243,7 @@ public:
 template<class TypeTag>
 struct HeatConductionType<TypeTag, TTag::NavierStokesNCNI> { using type = FouriersLaw<TypeTag>; };
 
-// \}
 } // end namespace Properties
 } // end namespace Dumux
 
-
-#endif
+#endif // DUMUX_FREEFLOW_NC_MODEL_HH

@@ -95,16 +95,17 @@ private:
     using FSY = GetPropType<TypeTag, Properties::FluidSystem>;
     using FST = GetPropType<TypeTag, Properties::FluidState>;
     using MT = GetPropType<TypeTag, Properties::ModelTraits>;
+    using DT = GetPropType<TypeTag, Properties::MolecularDiffusionType>;
 
     static_assert(FSY::numComponents == MT::numFluidComponents(), "Number of components mismatch between model and fluid system");
     static_assert(FST::numComponents == MT::numFluidComponents(), "Number of components mismatch between model and fluid state");
     static_assert(FSY::numPhases == MT::numFluidPhases(), "Number of phases mismatch between model and fluid system");
     static_assert(FST::numPhases == MT::numFluidPhases(), "Number of phases mismatch between model and fluid state");
 
-    using Traits = NavierStokesVolumeVariablesTraits<PV, FSY, FST, MT>;
-    using CompositionalVolVars = FreeflowNCVolumeVariables<Traits>;
+    using Traits = AddFreeflowDiffusionType<DT, NavierStokesVolumeVariablesTraits<PV, FSY, FST, MT>>;
+    using NCVolVars = FreeflowNCVolumeVariables<Traits>;
 public:
-    using type = ZeroEqVolumeVariables<Traits, CompositionalVolVars>;
+    using type = ZeroEqVolumeVariables<Traits, NCVolVars>;
 };
 
 //! The specific I/O fields
@@ -146,13 +147,14 @@ private:
     using FSY = GetPropType<TypeTag, Properties::FluidSystem>;
     using FST = GetPropType<TypeTag, Properties::FluidState>;
     using MT = GetPropType<TypeTag, Properties::ModelTraits>;
+    using DT = GetPropType<TypeTag, Properties::MolecularDiffusionType>;
 
     static_assert(FSY::numComponents == MT::numFluidComponents(), "Number of components mismatch between model and fluid system");
     static_assert(FST::numComponents == MT::numFluidComponents(), "Number of components mismatch between model and fluid state");
     static_assert(FSY::numPhases == MT::numFluidPhases(), "Number of phases mismatch between model and fluid system");
     static_assert(FST::numPhases == MT::numFluidPhases(), "Number of phases mismatch between model and fluid state");
 
-    using Traits = NavierStokesVolumeVariablesTraits<PV, FSY, FST, MT>;
+    using Traits = AddFreeflowDiffusionType<DT, NavierStokesVolumeVariablesTraits<PV, FSY, FST, MT>>;
     using NCVolVars = FreeflowNCVolumeVariables<Traits>;
 public:
     using type = ZeroEqVolumeVariables<Traits, NCVolVars>;
@@ -168,8 +170,7 @@ public:
     using type = FreeflowNonIsothermalIOFields<IsothermalIOFields, true/*turbulenceModel*/>;
 };
 
-// \}
 } // end namespace Properties
 } // end namespace Dumux
 
-#endif
+#endif // DUMUX_ZEROEQ_NC_MODEL_HH

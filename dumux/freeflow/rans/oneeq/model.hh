@@ -231,9 +231,7 @@ public:
 template<class TypeTag>
 struct IOFields<TypeTag, TTag::OneEqNI> { using type = FreeflowNonIsothermalIOFields<OneEqIOFields, true/*turbulenceModel*/>; };
 
-// \}
-}
-
+} // end properties
 } // end namespace
 
-#endif
+#endif // DUMUX_ONEEQ_MODEL_HH
