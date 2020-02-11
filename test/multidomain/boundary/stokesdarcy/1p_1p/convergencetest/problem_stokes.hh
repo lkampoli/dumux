@@ -63,7 +63,7 @@ template<class TypeTag>
 struct Problem<TypeTag, TTag::StokesOneP> { using type = Dumux::StokesSubProblem<TypeTag> ; };
 
 template<class TypeTag>
-struct EnableFVGridGeometryCache<TypeTag, TTag::StokesOneP> { static constexpr bool value = true; };
+struct EnableGridGeometryCache<TypeTag, TTag::StokesOneP> { static constexpr bool value = true; };
 template<class TypeTag>
 struct EnableGridFluxVariablesCache<TypeTag, TTag::StokesOneP> { static constexpr bool value = true; };
 template<class TypeTag>
@@ -84,12 +84,10 @@ class StokesSubProblem : public NavierStokesProblem<TypeTag>
     using GridView = GetPropType<TypeTag, Properties::GridView>;
     using Scalar = GetPropType<TypeTag, Properties::Scalar>;
 
-
-
     using BoundaryTypes = GetPropType<TypeTag, Properties::BoundaryTypes>;
 
-    using FVGridGeometry = GetPropType<TypeTag, Properties::FVGridGeometry>;
-    using FVElementGeometry = typename FVGridGeometry::LocalView;
+    using GridGeometry = GetPropType<TypeTag, Properties::GridGeometry>;
+    using FVElementGeometry = typename GridGeometry::LocalView;
     using SubControlVolumeFace = typename FVElementGeometry::SubControlVolumeFace;
     using Element = typename GridView::template Codim<0>::Entity;
 
@@ -101,14 +99,29 @@ class StokesSubProblem : public NavierStokesProblem<TypeTag>
 
     using CouplingManager = GetPropType<TypeTag, Properties::CouplingManager>;
 
+    enum class TestCase
+    {
+        ShiueExampleOne, ShiueExampleTwo, SomeName
+    };
+
 public:
     //! export the Indices
     using Indices = typename ModelTraits::Indices;
 
-    StokesSubProblem(std::shared_ptr<const FVGridGeometry> fvGridGeometry, std::shared_ptr<CouplingManager> couplingManager)
-    : ParentType(fvGridGeometry, "Stokes"), eps_(1e-6), couplingManager_(couplingManager)
+    StokesSubProblem(std::shared_ptr<const GridGeometry> gridGeometry, std::shared_ptr<CouplingManager> couplingManager)
+    : ParentType(gridGeometry, "Stokes"), couplingManager_(couplingManager)
     {
         problemName_ = getParam<std::string>("Vtk.OutputName") + "_" + getParamFromGroup<std::string>(this->paramGroup(), "Problem.Name");
+
+        const auto tmp = getParamFromGroup<std::string>(this->paramGroup(), "Problem.TestCase", "ShiueExampleTwo");
+        if (tmp == "ShiueExampleTwo")
+            testCase_ = TestCase::ShiueExampleOne;
+        else if (tmp == "ShiueExampleTwo")
+            testCase_ = TestCase::ShiueExampleTwo;
+        else if (tmp == "SomeName")
+            testCase_ = TestCase::SomeName;
+        else
+            DUNE_THROW(Dune::InvalidStateException, tmp + " is not a valid test case");
     }
 
     /*!
@@ -138,7 +151,19 @@ public:
      * \param globalPos The global position
      */
     NumEqVector sourceAtPos(const GlobalPosition &globalPos) const
-    { return NumEqVector(0.0); }
+    {
+        switch (testCase_)
+        {
+            case TestCase::ShiueExampleOne:
+                return rhsShiueEtAlExampleOne_(globalPos);
+            case TestCase::ShiueExampleTwo:
+                return rhsShiueEtAlExampleTwo_(globalPos);
+            case TestCase::SomeName:
+                return rhsShiueEtAlExampleOne_(globalPos);
+            default:
+                DUNE_THROW(Dune::InvalidStateException, "Invalid test case");
+        }
+    }
 
     // \}
 
@@ -166,7 +191,7 @@ public:
         {
             values.setCouplingNeumann(Indices::conti0EqIdx);
             values.setCouplingNeumann(Indices::momentumYBalanceIdx);
-            values.setBJS(Indices::momentumXBalanceIdx);
+            values.setBeaversJoseph(Indices::momentumXBalanceIdx);
         }
 
         return values;
@@ -177,13 +202,7 @@ public:
      */
     PrimaryVariables dirichletAtPos(const GlobalPosition& globalPos) const
     {
-        PrimaryVariables values;
-        const Scalar p = exactPressure(globalPos);
-        const auto v = exactVelocity(globalPos);
-        values[0] = v[0];
-        values[1] = v[1];
-        values[2] = p;
-        return values;
+        return analyticalSolution(globalPos);
     }
 
     /*!
@@ -252,23 +271,6 @@ public:
         return couplingManager().problem(CouplingManager::darcyIdx).spatialParams().beaversJosephCoeffAtPos(scvf.center());
     }
 
-    Scalar exactPressure(const GlobalPosition &globalPos) const
-    {
-        const Scalar x = globalPos[0];
-        const Scalar y = globalPos[1];
-        return 2.0*x + y - 1.0;
-    }
-
-    GlobalPosition exactVelocity(const GlobalPosition &globalPos) const
-    {
-        const Scalar x = globalPos[0];
-        const Scalar y = globalPos[1];
-        GlobalPosition velocity(0.0);
-        velocity[0] = (y-1.0)*(y-1.0) + x*(y-1.0) + 3.0*x - 1.0;
-        velocity[1] = x*(x-1.0) - 0.5*(y-1.0)*(y-1.0) - 3.0*y + 1.0;
-        return velocity;
-    }
-
     /*!
      * \brief Returns the analytical solution of the problem at a given position.
      *
@@ -277,39 +279,81 @@ public:
      */
     PrimaryVariables analyticalSolution(const GlobalPosition& globalPos) const
     {
-        // see Shiue et al., 2018: "Convergence of the MAC Scheme for the Stokes/Darcy Coupling Problem"
-        PrimaryVariables values;
-        const Scalar p = exactPressure(globalPos);
-        const auto v = exactVelocity(globalPos);
-
-        values[Indices::pressureIdx] = p;
-        values[Indices::velocityXIdx] = v[0];
-        values[Indices::velocityYIdx] = v[1];
-
-        return values;
+        switch (testCase_)
+        {
+            case TestCase::ShiueExampleOne:
+                return analyticalSolutionShiueEtAlExampleOne_(globalPos);
+            case TestCase::ShiueExampleTwo:
+                return analyticalSolutionShiueEtAlExampleTwo_(globalPos);
+            case TestCase::SomeName:
+                return analyticalSolutionShiueEtAlExampleOne_(globalPos);
+            default:
+                DUNE_THROW(Dune::InvalidStateException, "Invalid test case");
+        }
     }
-
 
     // \}
 
 private:
+
+    PrimaryVariables analyticalSolutionShiueEtAlExampleOne_(const GlobalPosition& globalPos) const
+    {
+        // see Shiue et al., 2018: "Convergence of the MAC Scheme for the Stokes/Darcy Coupling Problem"
+        PrimaryVariables sol(0.0);
+        const Scalar x = globalPos[0];
+        const Scalar y = globalPos[1];
+
+        using std::exp; using std::sin; using std::cos;
+        sol[Indices::velocityXIdx] = -1/M_PI * exp(y) * sin(M_PI*x);
+        sol[Indices::velocityXIdx] = (exp(y) - exp(1)) * cos(M_PI*x);
+        sol[Indices::pressureIdx] = 2*exp(y) * cos(M_PI*x);
+        return sol;
+    }
+
+    NumEqVector rhsShiueEtAlExampleOne_(const GlobalPosition& globalPos) const
+    {
+        const Scalar x = globalPos[0];
+        const Scalar y = globalPos[1];
+        using std::exp; using std::sin; using std::cos;
+        NumEqVector source(0.0);
+        source[Indices::momentumXBalanceIdx] = exp(y)*sin(M_PI*x) * (1/M_PI -3*M_PI);
+        source[Indices::momentumYBalanceIdx] = cos(M_PI*x) * (M_PI*M_PI*(exp(y)- exp(1)) + exp(y));
+        return NumEqVector(0.0);
+    }
+
+    PrimaryVariables analyticalSolutionShiueEtAlExampleTwo_(const GlobalPosition& globalPos) const
+    {
+        // see Shiue et al., 2018: "Convergence of the MAC Scheme for the Stokes/Darcy Coupling Problem"
+        PrimaryVariables sol(0.0);
+        const Scalar x = globalPos[0];
+        const Scalar y = globalPos[1];
+
+        sol[Indices::velocityXIdx] = (y-1.0)*(y-1.0) + x*(y-1.0) + 3.0*x - 1.0;
+        sol[Indices::velocityXIdx] = x*(x-1.0) - 0.5*(y-1.0)*(y-1.0) - 3.0*y + 1.0;
+        sol[Indices::pressureIdx] = 2.0*x + y - 1.0;
+        return sol;
+    }
+
+    NumEqVector rhsShiueEtAlExampleTwo_(const GlobalPosition& globalPos) const
+    { return NumEqVector(0.0); }
+
+
     bool onLeftBoundary_(const GlobalPosition &globalPos) const
-    { return globalPos[0] < this->fvGridGeometry().bBoxMin()[0] + eps_; }
+    { return globalPos[0] < this->gridGeometry().bBoxMin()[0] + eps_; }
 
     bool onRightBoundary_(const GlobalPosition &globalPos) const
-    { return globalPos[0] > this->fvGridGeometry().bBoxMax()[0] - eps_; }
+    { return globalPos[0] > this->gridGeometry().bBoxMax()[0] - eps_; }
 
     bool onLowerBoundary_(const GlobalPosition &globalPos) const
-    { return globalPos[1] < this->fvGridGeometry().bBoxMin()[1] + eps_; }
+    { return globalPos[1] < this->gridGeometry().bBoxMin()[1] + eps_; }
 
     bool onUpperBoundary_(const GlobalPosition &globalPos) const
-    { return globalPos[1] > this->fvGridGeometry().bBoxMax()[1] - eps_; }
+    { return globalPos[1] > this->gridGeometry().bBoxMax()[1] - eps_; }
 
-    Scalar eps_;
+    static constexpr Scalar eps_ = 1e-7;
     std::string problemName_;
-    bool verticalFlow_;
-
     std::shared_ptr<CouplingManager> couplingManager_;
+    TestCase testCase_;
 };
 } // end namespace Dumux
 

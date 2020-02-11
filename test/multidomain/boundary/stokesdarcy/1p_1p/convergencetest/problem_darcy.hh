@@ -66,9 +66,9 @@ struct Grid<TypeTag, TTag::DarcyOneP> { using type = Dune::YaspGrid<2>; };
 template<class TypeTag>
 struct SpatialParams<TypeTag, TTag::DarcyOneP>
 {
-    using FVGridGeometry = GetPropType<TypeTag, Properties::FVGridGeometry>;
+    using GridGeometry = GetPropType<TypeTag, Properties::GridGeometry>;
     using Scalar = GetPropType<TypeTag, Properties::Scalar>;
-    using type = OnePSpatialParams<FVGridGeometry, Scalar>;
+    using type = OnePSpatialParams<GridGeometry, Scalar>;
 };
 } // end namespace Properties
 
@@ -82,25 +82,40 @@ class DarcySubProblem : public PorousMediumFlowProblem<TypeTag>
     using NumEqVector = GetPropType<TypeTag, Properties::NumEqVector>;
     using BoundaryTypes = GetPropType<TypeTag, Properties::BoundaryTypes>;
     using VolumeVariables = GetPropType<TypeTag, Properties::VolumeVariables>;
-    using FVElementGeometry = typename GetPropType<TypeTag, Properties::FVGridGeometry>::LocalView;
+    using FVElementGeometry = typename GetPropType<TypeTag, Properties::GridGeometry>::LocalView;
     using SubControlVolume = typename FVElementGeometry::SubControlVolume;
     using SubControlVolumeFace = typename FVElementGeometry::SubControlVolumeFace;
-    using FVGridGeometry = GetPropType<TypeTag, Properties::FVGridGeometry>;
+    using GridGeometry = GetPropType<TypeTag, Properties::GridGeometry>;
 
     using Element = typename GridView::template Codim<0>::Entity;
     using GlobalPosition = typename Element::Geometry::GlobalCoordinate;
 
     using CouplingManager = GetPropType<TypeTag, Properties::CouplingManager>;
 
+    enum class TestCase
+    {
+        ShiueExampleOne, ShiueExampleTwo, SomeName
+    };
+
 public:
     //! export the Indices
     using Indices = typename GetPropType<TypeTag, Properties::ModelTraits>::Indices;
 
-    DarcySubProblem(std::shared_ptr<const FVGridGeometry> fvGridGeometry,
+    DarcySubProblem(std::shared_ptr<const GridGeometry> gridGeometry,
                    std::shared_ptr<CouplingManager> couplingManager)
-    : ParentType(fvGridGeometry, "Darcy"), eps_(1e-7), couplingManager_(couplingManager)
+    : ParentType(gridGeometry, "Darcy"), couplingManager_(couplingManager)
     {
         problemName_ = getParam<std::string>("Vtk.OutputName") + "_" + getParamFromGroup<std::string>(this->paramGroup(), "Problem.Name");
+
+        const auto tmp = getParamFromGroup<std::string>(this->paramGroup(), "Problem.TestCase", "ShiueExampleTwo");
+        if (tmp == "ShiueExampleTwo")
+            testCase_ = TestCase::ShiueExampleOne;
+        else if (tmp == "ShiueExampleTwo")
+            testCase_ = TestCase::ShiueExampleTwo;
+        else if (tmp == "SomeName")
+            testCase_ = TestCase::SomeName;
+        else
+            DUNE_THROW(Dune::InvalidStateException, tmp + " is not a valid test case");
     }
 
     /*!
@@ -158,7 +173,8 @@ public:
      */
     PrimaryVariables dirichlet(const Element &element, const SubControlVolumeFace &scvf) const
     {
-        return PrimaryVariables(exactPressure(scvf.center()));
+        const auto p = analyticalSolution(scvf.center())[2];
+        return PrimaryVariables(p);
     }
 
     /*!
@@ -202,12 +218,20 @@ public:
      * \param elemVolVars The element volume variables
      * \param scv The sub control volume
      */
-    template<class ElementVolumeVariables>
-    NumEqVector source(const Element &element,
-                       const FVElementGeometry& fvGeometry,
-                       const ElementVolumeVariables& elemVolVars,
-                       const SubControlVolume &scv) const
-    { return NumEqVector(0.0); }
+    NumEqVector sourceAtPos(const GlobalPosition& globalPos) const
+    {
+        switch (testCase_)
+        {
+            case TestCase::ShiueExampleOne:
+                return rhsShiueEtAlExampleOne_(globalPos);
+            case TestCase::ShiueExampleTwo:
+                return rhsShiueEtAlExampleTwo_(globalPos);
+            case TestCase::SomeName:
+                return rhsShiueEtAlExampleOne_(globalPos);
+            default:
+                DUNE_THROW(Dune::InvalidStateException, "Invalid test case");
+        }
+    }
 
     // \}
 
@@ -224,25 +248,6 @@ public:
         return PrimaryVariables(0.0);
     }
 
-    //! exact pressure solution at a given position
-    Scalar exactPressure(const GlobalPosition& globalPos) const
-    {
-        const Scalar x = globalPos[0];
-        const Scalar y = globalPos[1];
-        return x*(1.0-x)*(y-1.0) + (y-1.0)*(y-1.0)*(y-1.0)/3.0 + 2.0*x + 2.0*y + 4.0;
-    }
-
-    GlobalPosition exactVelocity(const GlobalPosition& globalPos) const
-    {
-        const Scalar x = globalPos[0];
-        const Scalar y = globalPos[1];
-        GlobalPosition velocity(0.0);
-        velocity[0] = x*(y - 1.0) + (x - 1.0)*(y - 1.0) - 2.0;
-        velocity[1] = x*(x - 1.0) - 1.0*(y - 1.0)*(y - 1.0) - 2.0;
-        return velocity;
-    }
-
-
     /*!
      * \brief Returns the analytical solution of the problem at a given position.
      *
@@ -251,16 +256,17 @@ public:
      */
     auto analyticalSolution(const GlobalPosition& globalPos) const
     {
-        // see Shiue et al., 2018: "Convergence of the MAC Scheme for the Stokes/Darcy Coupling Problem"
-        Dune::FieldVector<Scalar, 3> values;
-        const Scalar p = exactPressure(globalPos);
-        const auto v = exactVelocity(globalPos);
-
-        values[2] = p;
-        values[0] = v[0];
-        values[1] = v[1];
-
-        return values;
+        switch (testCase_)
+        {
+            case TestCase::ShiueExampleOne:
+                return analyticalSolutionShiueEtAlExampleOne_(globalPos);
+            case TestCase::ShiueExampleTwo:
+                return analyticalSolutionShiueEtAlExampleTwo_(globalPos);
+            case TestCase::SomeName:
+                return analyticalSolutionShiueEtAlExampleOne_(globalPos);
+            default:
+                DUNE_THROW(Dune::InvalidStateException, "Invalid test case");
+        }
     }
 
 
@@ -272,13 +278,64 @@ public:
 
 private:
 
-    bool onLowerBoundary_(const GlobalPosition &globalPos) const
-    { return globalPos[1] < this->fvGridGeometry().bBoxMin()[1] + eps_; }
+    Dune::FieldVector<Scalar, 3> analyticalSolutionShiueEtAlExampleOne_(const GlobalPosition& globalPos) const
+    {
+        //         u=& -1/pi * exp(y) * sin(pi*x);\\
+        // v=& (exp(y) - exp(1)) * cos(pi*x);\\
+        // p_{ff} =& 2*exp(y) * cos(pi*x);\\
+        // p_{pm} =& (exp(y) - y*exp(1)) * cos(pi*x);\\
+        // rhsu =& exp(y)*sin(pi*x) * (1/pi -3*pi);\\
+        // rhsv =& cos(pi*x) * (pi*pi*(exp(y)- exp(1)) + exp(y));\\
+        // rhsp_{ff} =& 0;\\
+        // rhsp_{pm} =& cos(pi*x) * (pi*pi*(exp(y) - y*exp(1)) - exp(y));
+        // see Shiue et al., 2018: "Convergence of the MAC Scheme for the Stokes/Darcy Coupling Problem"
+        Dune::FieldVector<Scalar, 3> sol(0.0);
+        const Scalar x = globalPos[0];
+        const Scalar y = globalPos[1];
 
-    Scalar eps_;
+        using std::exp; using std::sin; using std::cos;
+        sol[2] = (exp(y) - y*exp(1)) * cos(M_PI*x);
+        // sol[0] = x*(y - 1.0) + (x - 1.0)*(y - 1.0) - 2.0;
+        // sol[1] = x*(x - 1.0) - 1.0*(y - 1.0)*(y - 1.0) - 2.0;
+
+        return sol;
+    }
+
+    NumEqVector rhsShiueEtAlExampleOne_(const GlobalPosition& globalPos) const
+    {
+        const Scalar x = globalPos[0];
+        const Scalar y = globalPos[1];
+        NumEqVector source;
+        using std::exp; using std::sin; using std::cos;
+        source = cos(M_PI*x) * (M_PI*M_PI*(exp(y) - y*exp(1)) - exp(y));
+        return source;
+    }
+
+    Dune::FieldVector<Scalar, 3> analyticalSolutionShiueEtAlExampleTwo_(const GlobalPosition& globalPos) const
+    {
+        // see Shiue et al., 2018: "Convergence of the MAC Scheme for the Stokes/Darcy Coupling Problem"
+        Dune::FieldVector<Scalar, 3> sol(0.0);
+        const Scalar x = globalPos[0];
+        const Scalar y = globalPos[1];
+
+        sol[2] = x*(1.0-x)*(y-1.0) + (y-1.0)*(y-1.0)*(y-1.0)/3.0 + 2.0*x + 2.0*y + 4.0;
+        sol[0] = x*(y - 1.0) + (x - 1.0)*(y - 1.0) - 2.0;
+        sol[1] = x*(x - 1.0) - 1.0*(y - 1.0)*(y - 1.0) - 2.0;
+
+        return sol;
+    }
+
+    NumEqVector rhsShiueEtAlExampleTwo_(const GlobalPosition& globalPos) const
+    { return NumEqVector(0.0); }
+
+
+    bool onLowerBoundary_(const GlobalPosition &globalPos) const
+    { return globalPos[1] < this->gridGeometry().bBoxMin()[1] + eps_; }
+
+    static constexpr Scalar eps_ = 1e-7;
     std::shared_ptr<CouplingManager> couplingManager_;
     std::string problemName_;
-    bool verticalFlow_;
+    TestCase testCase_;
 };
 } // end namespace Dumux
 

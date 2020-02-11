@@ -84,8 +84,8 @@ struct CouplingManager<TypeTag, TTag::DarcyOneP>
 template<class Scalar, class Problem>
 auto createStokesAnalyticalSolution(const Scalar time, const Problem& problem)
 {
-    const auto& fvGridGeometry = problem.fvGridGeometry();
-    using GridView = typename std::decay_t<decltype(fvGridGeometry)>::GridView;
+    const auto& gridGeometry = problem.gridGeometry();
+    using GridView = typename std::decay_t<decltype(gridGeometry)>::GridView;
 
     static constexpr auto dim = GridView::dimension;
     static constexpr auto dimWorld = GridView::dimensionworld;
@@ -96,14 +96,14 @@ auto createStokesAnalyticalSolution(const Scalar time, const Problem& problem)
     std::vector<VelocityVector> analyticalVelocity;
     std::vector<VelocityVector> analyticalVelocityOnFace;
 
-    analyticalPressure.resize(fvGridGeometry.numCellCenterDofs());
-    analyticalVelocity.resize(fvGridGeometry.numCellCenterDofs());
-    analyticalVelocityOnFace.resize(fvGridGeometry.numFaceDofs());
+    analyticalPressure.resize(gridGeometry.numCellCenterDofs());
+    analyticalVelocity.resize(gridGeometry.numCellCenterDofs());
+    analyticalVelocityOnFace.resize(gridGeometry.numFaceDofs());
 
     using Indices = typename Problem::Indices;
-    for (const auto& element : elements(fvGridGeometry.gridView()))
+    for (const auto& element : elements(gridGeometry.gridView()))
     {
-        auto fvGeometry = localView(fvGridGeometry);
+        auto fvGeometry = localView(gridGeometry);
         fvGeometry.bindElement(element);
         for (auto&& scv : scvs(fvGeometry))
         {
@@ -140,8 +140,8 @@ auto createStokesAnalyticalSolution(const Scalar time, const Problem& problem)
 template<class Scalar, class Problem>
 auto createDarcyAnalyticalSolution(const Scalar time, const Problem& problem)
 {
-    const auto& fvGridGeometry = problem.fvGridGeometry();
-    using GridView = typename std::decay_t<decltype(fvGridGeometry)>::GridView;
+    const auto& gridGeometry = problem.gridGeometry();
+    using GridView = typename std::decay_t<decltype(gridGeometry)>::GridView;
 
     static constexpr auto dim = GridView::dimension;
     static constexpr auto dimWorld = GridView::dimensionworld;
@@ -151,12 +151,12 @@ auto createDarcyAnalyticalSolution(const Scalar time, const Problem& problem)
     std::vector<Scalar> analyticalPressure;
     std::vector<VelocityVector> analyticalVelocity;
 
-    analyticalPressure.resize(fvGridGeometry.numDofs());
-    analyticalVelocity.resize(fvGridGeometry.numDofs());
+    analyticalPressure.resize(gridGeometry.numDofs());
+    analyticalVelocity.resize(gridGeometry.numDofs());
 
-    for (const auto& element : elements(fvGridGeometry.gridView()))
+    for (const auto& element : elements(gridGeometry.gridView()))
     {
-        auto fvGeometry = localView(fvGridGeometry);
+        auto fvGeometry = localView(gridGeometry);
         fvGeometry.bindElement(element);
         for (auto&& scv : scvs(fvGeometry))
         {
@@ -185,8 +185,8 @@ void printStokesL2Error(const Problem& problem, const SolutionVector& x)
 
     using L2Error = NavierStokesTestL2Error<Scalar, ModelTraits, PrimaryVariables>;
     const auto l2error = L2Error::calculateL2Error(problem, x);
-    const int numCellCenterDofs = problem.fvGridGeometry().numCellCenterDofs();
-    const int numFaceDofs = problem.fvGridGeometry().numFaceDofs();
+    const int numCellCenterDofs = problem.gridGeometry().numCellCenterDofs();
+    const int numFaceDofs = problem.gridGeometry().numFaceDofs();
     std::ostream tmp(std::cout.rdbuf());
     tmp << std::setprecision(8) << "** L2 error (abs/rel) for "
         << std::setw(6) << numCellCenterDofs << " cc dofs and " << numFaceDofs << " face dofs (total: " << numCellCenterDofs + numFaceDofs << "): "
@@ -211,22 +211,22 @@ void printDarcyL2Error(const Problem& problem, const SolutionVector& x)
 
     Scalar l2error = 0.0;
 
-    for (const auto& element : elements(problem.fvGridGeometry().gridView()))
+    for (const auto& element : elements(problem.gridGeometry().gridView()))
     {
-        auto fvGeometry = localView(problem.fvGridGeometry());
+        auto fvGeometry = localView(problem.gridGeometry());
         fvGeometry.bindElement(element);
 
         for (auto&& scv : scvs(fvGeometry))
         {
             const auto dofIdx = scv.dofIndex();
-            const Scalar delta = x[dofIdx] - problem.exactPressure(scv.center());
+            const Scalar delta = x[dofIdx] - problem.analyticalSolution(scv.center())[2/*pressureIdx*/];
             l2error += scv.volume()*(delta*delta);
         }
     }
     using std::sqrt;
     l2error = sqrt(l2error);
 
-    const auto numDofs = problem.fvGridGeometry().numDofs();
+    const auto numDofs = problem.gridGeometry().numDofs();
     std::ostream tmp(std::cout.rdbuf());
     tmp << std::setprecision(8) << "** L2 error (abs) for "
             << std::setw(6) << numDofs << " cc dofs "
@@ -274,11 +274,11 @@ int main(int argc, char** argv) try
     const auto& stokesGridView = stokesGridManager.grid().leafGridView();
 
     // create the finite volume grid geometry
-    using StokesFVGridGeometry = GetPropType<StokesTypeTag, Properties::FVGridGeometry>;
-    auto stokesFvGridGeometry = std::make_shared<StokesFVGridGeometry>(stokesGridView);
+    using StokesGridGeometry = GetPropType<StokesTypeTag, Properties::GridGeometry>;
+    auto stokesFvGridGeometry = std::make_shared<StokesGridGeometry>(stokesGridView);
     stokesFvGridGeometry->update();
-    using DarcyFVGridGeometry = GetPropType<DarcyTypeTag, Properties::FVGridGeometry>;
-    auto darcyFvGridGeometry = std::make_shared<DarcyFVGridGeometry>(darcyGridView);
+    using DarcyGridGeometry = GetPropType<DarcyTypeTag, Properties::GridGeometry>;
+    auto darcyFvGridGeometry = std::make_shared<DarcyGridGeometry>(darcyGridView);
     darcyFvGridGeometry->update();
 
     using Traits = StaggeredMultiDomainTraits<StokesTypeTag, StokesTypeTag, DarcyTypeTag>;
