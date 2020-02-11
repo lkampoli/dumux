@@ -92,9 +92,13 @@ class DarcySubProblem : public PorousMediumFlowProblem<TypeTag>
 
     using CouplingManager = GetPropType<TypeTag, Properties::CouplingManager>;
 
+    static constexpr auto velocityXIdx = 0;
+    static constexpr auto velocityYIdx = 1;
+    static constexpr auto pressureIdx = 2;
+
     enum class TestCase
     {
-        ShiueExampleOne, ShiueExampleTwo, SomeName
+        ShiueExampleOne, ShiueExampleTwo, Rybak
     };
 
 public:
@@ -108,12 +112,12 @@ public:
         problemName_ = getParam<std::string>("Vtk.OutputName") + "_" + getParamFromGroup<std::string>(this->paramGroup(), "Problem.Name");
 
         const auto tmp = getParamFromGroup<std::string>(this->paramGroup(), "Problem.TestCase", "ShiueExampleTwo");
-        if (tmp == "ShiueExampleTwo")
+        if (tmp == "ShiueExampleOne")
             testCase_ = TestCase::ShiueExampleOne;
         else if (tmp == "ShiueExampleTwo")
             testCase_ = TestCase::ShiueExampleTwo;
-        else if (tmp == "SomeName")
-            testCase_ = TestCase::SomeName;
+        else if (tmp == "Rybak")
+            testCase_ = TestCase::Rybak;
         else
             DUNE_THROW(Dune::InvalidStateException, tmp + " is not a valid test case");
     }
@@ -226,8 +230,8 @@ public:
                 return rhsShiueEtAlExampleOne_(globalPos);
             case TestCase::ShiueExampleTwo:
                 return rhsShiueEtAlExampleTwo_(globalPos);
-            case TestCase::SomeName:
-                return rhsShiueEtAlExampleOne_(globalPos);
+            case TestCase::Rybak:
+                return rhsRybak_(globalPos);
             default:
                 DUNE_THROW(Dune::InvalidStateException, "Invalid test case");
         }
@@ -262,8 +266,8 @@ public:
                 return analyticalSolutionShiueEtAlExampleOne_(globalPos);
             case TestCase::ShiueExampleTwo:
                 return analyticalSolutionShiueEtAlExampleTwo_(globalPos);
-            case TestCase::SomeName:
-                return analyticalSolutionShiueEtAlExampleOne_(globalPos);
+            case TestCase::Rybak:
+                return analyticalSolutionRybak_(globalPos);
             default:
                 DUNE_THROW(Dune::InvalidStateException, "Invalid test case");
         }
@@ -278,25 +282,39 @@ public:
 
 private:
 
+    Dune::FieldVector<Scalar, 3> analyticalSolutionRybak_(const GlobalPosition& globalPos) const
+    {
+        Dune::FieldVector<Scalar, 3> sol(0.0);
+        const Scalar x = globalPos[0];
+        const Scalar y = globalPos[1];
+
+        using std::exp; using std::sin; using std::cos;
+        sol[velocityXIdx] = -0.5*M_PI*y*y*cos(M_PI*x);
+        sol[velocityYIdx] = -1.0*y*sin(M_PI*x);
+        sol[pressureIdx] = 0.5*y*y*sin(M_PI*x);
+        return sol;
+    }
+
+    NumEqVector rhsRybak_(const GlobalPosition& globalPos) const
+    {
+        const Scalar x = globalPos[0];
+        const Scalar y = globalPos[1];
+        using std::sin;
+        NumEqVector source = (0.5*M_PI*y*M_PI*y - 1)*sin(M_PI*x);
+        return source;
+    }
+
     Dune::FieldVector<Scalar, 3> analyticalSolutionShiueEtAlExampleOne_(const GlobalPosition& globalPos) const
     {
-        //         u=& -1/pi * exp(y) * sin(pi*x);\\
-        // v=& (exp(y) - exp(1)) * cos(pi*x);\\
-        // p_{ff} =& 2*exp(y) * cos(pi*x);\\
-        // p_{pm} =& (exp(y) - y*exp(1)) * cos(pi*x);\\
-        // rhsu =& exp(y)*sin(pi*x) * (1/pi -3*pi);\\
-        // rhsv =& cos(pi*x) * (pi*pi*(exp(y)- exp(1)) + exp(y));\\
-        // rhsp_{ff} =& 0;\\
-        // rhsp_{pm} =& cos(pi*x) * (pi*pi*(exp(y) - y*exp(1)) - exp(y));
         // see Shiue et al., 2018: "Convergence of the MAC Scheme for the Stokes/Darcy Coupling Problem"
         Dune::FieldVector<Scalar, 3> sol(0.0);
         const Scalar x = globalPos[0];
         const Scalar y = globalPos[1];
 
         using std::exp; using std::sin; using std::cos;
-        sol[2] = (exp(y) - y*exp(1)) * cos(M_PI*x);
-        // sol[0] = x*(y - 1.0) + (x - 1.0)*(y - 1.0) - 2.0;
-        // sol[1] = x*(x - 1.0) - 1.0*(y - 1.0)*(y - 1.0) - 2.0;
+        sol[pressureIdx] = (exp(y) - y*exp(1)) * cos(M_PI*x);
+        sol[velocityXIdx] = M_PI*(-exp(1)*y + exp(y))*sin(M_PI*x);
+        sol[velocityYIdx] = (exp(1) - exp(y))*cos(M_PI*x);
 
         return sol;
     }
@@ -318,9 +336,9 @@ private:
         const Scalar x = globalPos[0];
         const Scalar y = globalPos[1];
 
-        sol[2] = x*(1.0-x)*(y-1.0) + (y-1.0)*(y-1.0)*(y-1.0)/3.0 + 2.0*x + 2.0*y + 4.0;
-        sol[0] = x*(y - 1.0) + (x - 1.0)*(y - 1.0) - 2.0;
-        sol[1] = x*(x - 1.0) - 1.0*(y - 1.0)*(y - 1.0) - 2.0;
+        sol[pressureIdx] = x*(1.0-x)*(y-1.0) + (y-1.0)*(y-1.0)*(y-1.0)/3.0 + 2.0*x + 2.0*y + 4.0;
+        sol[velocityXIdx] = x*(y - 1.0) + (x - 1.0)*(y - 1.0) - 2.0;
+        sol[velocityYIdx] = x*(x - 1.0) - 1.0*(y - 1.0)*(y - 1.0) - 2.0;
 
         return sol;
     }

@@ -101,7 +101,7 @@ class StokesSubProblem : public NavierStokesProblem<TypeTag>
 
     enum class TestCase
     {
-        ShiueExampleOne, ShiueExampleTwo, SomeName
+        ShiueExampleOne, ShiueExampleTwo, Rybak
     };
 
 public:
@@ -113,13 +113,14 @@ public:
     {
         problemName_ = getParam<std::string>("Vtk.OutputName") + "_" + getParamFromGroup<std::string>(this->paramGroup(), "Problem.Name");
 
+
         const auto tmp = getParamFromGroup<std::string>(this->paramGroup(), "Problem.TestCase", "ShiueExampleTwo");
-        if (tmp == "ShiueExampleTwo")
+        if (tmp == "ShiueExampleOne")
             testCase_ = TestCase::ShiueExampleOne;
         else if (tmp == "ShiueExampleTwo")
             testCase_ = TestCase::ShiueExampleTwo;
-        else if (tmp == "SomeName")
-            testCase_ = TestCase::SomeName;
+        else if (tmp == "Rybak")
+            testCase_ = TestCase::Rybak;
         else
             DUNE_THROW(Dune::InvalidStateException, tmp + " is not a valid test case");
     }
@@ -158,8 +159,8 @@ public:
                 return rhsShiueEtAlExampleOne_(globalPos);
             case TestCase::ShiueExampleTwo:
                 return rhsShiueEtAlExampleTwo_(globalPos);
-            case TestCase::SomeName:
-                return rhsShiueEtAlExampleOne_(globalPos);
+            case TestCase::Rybak:
+                return rhsRybak_(globalPos);
             default:
                 DUNE_THROW(Dune::InvalidStateException, "Invalid test case");
         }
@@ -285,8 +286,8 @@ public:
                 return analyticalSolutionShiueEtAlExampleOne_(globalPos);
             case TestCase::ShiueExampleTwo:
                 return analyticalSolutionShiueEtAlExampleTwo_(globalPos);
-            case TestCase::SomeName:
-                return analyticalSolutionShiueEtAlExampleOne_(globalPos);
+            case TestCase::Rybak:
+                return analyticalSolutionRybak_(globalPos);
             default:
                 DUNE_THROW(Dune::InvalidStateException, "Invalid test case");
         }
@@ -295,6 +296,30 @@ public:
     // \}
 
 private:
+
+    PrimaryVariables analyticalSolutionRybak_(const GlobalPosition& globalPos) const
+    {
+        PrimaryVariables sol(0.0);
+        const Scalar x = globalPos[0];
+        const Scalar y = globalPos[1];
+
+        using std::sin; using std::cos;
+        sol[Indices::velocityXIdx] = -cos(M_PI*x)*sin(M_PI*y);
+        sol[Indices::velocityYIdx] = sin(M_PI*x)*cos(M_PI*y);
+        sol[Indices::pressureIdx] = 0.5*y*sin(M_PI*x);
+        return sol;
+    }
+
+    NumEqVector rhsRybak_(const GlobalPosition& globalPos) const
+    {
+        const Scalar x = globalPos[0];
+        const Scalar y = globalPos[1];
+        NumEqVector source(0.0);
+        using std::sin; using std::cos;
+        source[Indices::momentumXBalanceIdx] = 0.5*M_PI*y*cos(M_PI*x) - 2*M_PI*M_PI*cos(M_PI*x)*sin(M_PI*y);
+        source[Indices::momentumYBalanceIdx] = 0.5*sin(M_PI*x) + 2*M_PI*M_PI*sin(M_PI*x)*cos(M_PI*y);
+        return source;
+    }
 
     PrimaryVariables analyticalSolutionShiueEtAlExampleOne_(const GlobalPosition& globalPos) const
     {
@@ -305,20 +330,21 @@ private:
 
         using std::exp; using std::sin; using std::cos;
         sol[Indices::velocityXIdx] = -1/M_PI * exp(y) * sin(M_PI*x);
-        sol[Indices::velocityXIdx] = (exp(y) - exp(1)) * cos(M_PI*x);
+        sol[Indices::velocityYIdx] = (exp(y) - exp(1)) * cos(M_PI*x);
         sol[Indices::pressureIdx] = 2*exp(y) * cos(M_PI*x);
         return sol;
     }
 
     NumEqVector rhsShiueEtAlExampleOne_(const GlobalPosition& globalPos) const
     {
+        // see Shiue et al., 2018: "Convergence of the MAC Scheme for the Stokes/Darcy Coupling Problem"
         const Scalar x = globalPos[0];
         const Scalar y = globalPos[1];
         using std::exp; using std::sin; using std::cos;
         NumEqVector source(0.0);
         source[Indices::momentumXBalanceIdx] = exp(y)*sin(M_PI*x) * (1/M_PI -3*M_PI);
         source[Indices::momentumYBalanceIdx] = cos(M_PI*x) * (M_PI*M_PI*(exp(y)- exp(1)) + exp(y));
-        return NumEqVector(0.0);
+        return source;
     }
 
     PrimaryVariables analyticalSolutionShiueEtAlExampleTwo_(const GlobalPosition& globalPos) const
@@ -329,7 +355,7 @@ private:
         const Scalar y = globalPos[1];
 
         sol[Indices::velocityXIdx] = (y-1.0)*(y-1.0) + x*(y-1.0) + 3.0*x - 1.0;
-        sol[Indices::velocityXIdx] = x*(x-1.0) - 0.5*(y-1.0)*(y-1.0) - 3.0*y + 1.0;
+        sol[Indices::velocityYIdx] = x*(x-1.0) - 0.5*(y-1.0)*(y-1.0) - 3.0*y + 1.0;
         sol[Indices::pressureIdx] = 2.0*x + y - 1.0;
         return sol;
     }
