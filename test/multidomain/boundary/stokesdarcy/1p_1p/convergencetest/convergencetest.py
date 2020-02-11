@@ -66,21 +66,7 @@ def checkRatesStokes():
 
     subprocess.call(['cat', testname + '_stokes.log'])
 
-    def mean(numbers):
-        return float(sum(numbers)) / len(numbers)
-
-    # check the rates, we expect rates around 2
-    if mean(resultsP) < 2.05 and mean(resultsP) < 1.84:
-        sys.stderr.write("*"*70 + "\n" + "The convergence rates for pressure were not close enough to 2! Test failed.\n" + "*"*70 + "\n")
-        sys.exit(1)
-
-    if mean(resultsVx) < 2.05 and mean(resultsVx) < 1.95:
-        sys.stderr.write("*"*70 + "\n" + "The convergence rates for x-velocity were not close enough to 2! Test failed.\n" + "*"*70 + "\n")
-        sys.exit(1)
-
-    if mean(resultsVy) < 2.05 and mean(resultsVy) < 1.95:
-        sys.stderr.write("*"*70 + "\n" + "The convergence rates for y-velocity were not close enough to 2! Test failed.\n" + "*"*70 + "\n")
-        sys.exit(1)
+    return {"p" : resultsP, "v_x" : resultsVx, "v_y" : resultsVy}
 
 def checkRatesDarcy():
     # check the rates and append them to the log file
@@ -116,18 +102,33 @@ def checkRatesDarcy():
 
     subprocess.call(['cat', testname + '_darcy.log'])
 
+    return {"p" : resultsP}
+
+def checkRatesStokesAndDarcy():
+    resultsStokes = checkRatesStokes()
+    resultsDarcy = checkRatesDarcy()
+
     def mean(numbers):
         return float(sum(numbers)) / len(numbers)
 
     # check the rates, we expect rates around 2
-    if mean(resultsP) < 2.05 and mean(resultsP) < 1.95:
+    if mean(resultsStokes["p"]) < 2.05 and mean(resultsStokes["p"]) < 1.84:
         sys.stderr.write("*"*70 + "\n" + "The convergence rates for pressure were not close enough to 2! Test failed.\n" + "*"*70 + "\n")
         sys.exit(1)
 
-# check the rates and append them to the log file
-checkRatesStokes()
-checkRatesDarcy()
-# checkRates(testname + '_darcy.log')
+    if mean(resultsStokes["v_x"]) < 2.05 and mean(resultsStokes["v_x"]) < 1.95:
+        sys.stderr.write("*"*70 + "\n" + "The convergence rates for x-velocity were not close enough to 2! Test failed.\n" + "*"*70 + "\n")
+        sys.exit(1)
 
+    if mean(resultsStokes["v_y"]) < 2.05 and mean(resultsStokes["v_y"]) < 1.95:
+        sys.stderr.write("*"*70 + "\n" + "The convergence rates for y-velocity were not close enough to 2! Test failed.\n" + "*"*70 + "\n")
+        sys.exit(1)
+
+    if mean(resultsDarcy["p"]) < 2.05 and mean(resultsDarcy["p"]) < 1.95:
+        sys.stderr.write("*"*70 + "\n" + "The convergence rates for pressure were not close enough to 2! Test failed.\n" + "*"*70 + "\n")
+        sys.exit(1)
+
+
+checkRatesStokesAndDarcy()
 
 sys.exit(0)
