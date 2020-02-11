@@ -59,7 +59,7 @@ class StaggeredVtkOutputModule
     using Element = typename GridView::template Codim<0>::Entity;
     using GlobalPosition = typename Element::Geometry::GlobalCoordinate;
 
-    struct FaceVarScalarDataInfo { std::function<Scalar(const FaceVariables&)> get; std::string name; };
+    struct FaceVarScalarDataInfo { std::function<Scalar(const FaceVariables&)> get; std::string name;} ;
     struct FaceVarVectorDataInfo { std::function<GlobalPosition(const SubControlVolumeFace& scvf, const FaceVariables&)> get; std::string name; };
 
     struct FaceFieldScalarDataInfo
@@ -77,7 +77,6 @@ class StaggeredVtkOutputModule
     };
 
 public:
-
     template<class Sol>
     StaggeredVtkOutputModule(const GridVariables& gridVariables,
                              const Sol& sol,
@@ -133,7 +132,7 @@ public:
     //! \param name The name of the vtk field
     void addFaceVariable(std::function<Scalar(const FaceVariables&)>&& f, const std::string& name)
     {
-        faceVarScalarDataInfo_.push_back(FaceVarScalarDataInfo{f, name});
+        faceVarScalarDataInfo_.push_back(FaceVarScalarDataInfo{f, name });
     }
 
     //! Add a vector-valued faceVarible
@@ -141,7 +140,7 @@ public:
     //! \param name The name of the vtk field
     void addFaceVariable(std::function<GlobalPosition(const SubControlVolumeFace& scvf, const FaceVariables&)>&& f, const std::string& name)
     {
-        faceVarVectorDataInfo_.push_back(FaceVarVectorDataInfo{f, name});
+        faceVarVectorDataInfo_.push_back(FaceVarVectorDataInfo{f, name });
     }
 
     //! Write the values to vtp files
@@ -247,7 +246,6 @@ private:
         coordinates_.shrink_to_fit();
         coordinatesInitialized_ = false;
     }
-
 
     std::shared_ptr<PointCloudVtkWriter<Scalar, GlobalPosition>> faceWriter_;
 
