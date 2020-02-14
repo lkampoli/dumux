@@ -9,16 +9,16 @@ dumux_add_test(NAME test_2pncmin_dissolution_box
               CMD_ARGS      --script fuzzy
                             --files ${CMAKE_SOURCE_DIR}/test/references/test_2pncmin_dissolution_box-reference.vtu
                                     ${CMAKE_CURRENT_BINARY_DIR}/test_2pncmin_dissolution_box-00043.vtu
-                            --command "${CMAKE_CURRENT_BINARY_DIR}/test_2pncmin_dissolution_box -ParameterFile params.input -Problem.Name test_2pncmin_dissolution_box")
+                            --command "${CMAKE_CURRENT_BINARY_DIR}/test_2pncmin_dissolution_box -ParameterFile params.input -Problem.Name test_2pncmin_dissolution_box -Vtk.Precision Float64")
 
 dumux_add_test(NAME test_2pncmin_dissolution_box_restart
-              LABELS porousmediumflow 2pncmin
+              LABELS porousmediumflow 2pncmin restart
               TARGET  test_2pncmin_dissolution_box
               COMMAND ${CMAKE_SOURCE_DIR}/bin/testing/runtest.py
               CMD_ARGS --script fuzzy
                        --files ${CMAKE_SOURCE_DIR}/test/references/test_2pncmin_dissolution_box-reference.vtu
                                ${CMAKE_CURRENT_BINARY_DIR}/test_2pncmin_dissolution_box_restart-00005.vtu
-                       --command "${CMAKE_CURRENT_BINARY_DIR}/test_2pncmin_dissolution_box params.input -Problem.Name test_2pncmin_dissolution_box_restart -TimeLoop.DtInitial 50000 -Restart.Time 772823 -Restart.File test_2pncmin_dissolution_box-00038.vtu")
+                       --command "${CMAKE_CURRENT_BINARY_DIR}/test_2pncmin_dissolution_box params.input -Problem.Name test_2pncmin_dissolution_box_restart -TimeLoop.DtInitial 50000 -Restart.Time 772823 -Restart.File test_2pncmin_dissolution_box-00038.vtu -Vtk.Precision Float64")
 
 # the restart test has to run after the test that produces the corresponding vtu file
 set_tests_properties(test_2pncmin_dissolution_box_restart PROPERTIES DEPENDS test_2pncmin_dissolution_box)

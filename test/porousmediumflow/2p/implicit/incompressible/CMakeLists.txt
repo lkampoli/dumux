@@ -11,17 +11,17 @@ dumux_add_test(NAME test_2p_incompressible_tpfa
               CMD_ARGS --script fuzzy
                        --files ${CMAKE_SOURCE_DIR}/test/references/test_2p_incompressible_cc-reference.vtu
                                ${CMAKE_CURRENT_BINARY_DIR}/test_2p_incompressible_tpfa-00007.vtu
-                       --command "${CMAKE_CURRENT_BINARY_DIR}/test_2p_incompressible_tpfa params.input -Problem.Name test_2p_incompressible_tpfa")
+                       --command "${CMAKE_CURRENT_BINARY_DIR}/test_2p_incompressible_tpfa params.input -Problem.Name test_2p_incompressible_tpfa -Vtk.Precision Float64")
 
 # using tpfa
 dumux_add_test(NAME test_2p_incompressible_tpfa_restart
               TARGET test_2p_incompressible_tpfa
-              LABELS porousmediumflow 2p
+              LABELS porousmediumflow 2p restart
               COMMAND ${CMAKE_SOURCE_DIR}/bin/testing/runtest.py
               CMD_ARGS --script fuzzy
                        --files ${CMAKE_SOURCE_DIR}/test/references/test_2p_incompressible_cc-reference.vtu
                                ${CMAKE_CURRENT_BINARY_DIR}/test_2p_incompressible_tpfa_restart-00002.vtu
-                       --command "${CMAKE_CURRENT_BINARY_DIR}/test_2p_incompressible_tpfa params.input -Problem.Name test_2p_incompressible_tpfa_restart  -TimeLoop.DtInitial 603.14 -Restart.Time 2054.01 -Restart.File test_2p_incompressible_tpfa-00005.vtu")
+                       --command "${CMAKE_CURRENT_BINARY_DIR}/test_2p_incompressible_tpfa params.input -Problem.Name test_2p_incompressible_tpfa_restart  -TimeLoop.DtInitial 603.14 -Restart.Time 2054.01 -Restart.File test_2p_incompressible_tpfa-00005.vtu -Vtk.Precision Float64")
 
 # the restart test has to run after the test that produces the corresponding vtu file
 set_tests_properties(test_2p_incompressible_tpfa_restart PROPERTIES DEPENDS test_2p_incompressible_tpfa)

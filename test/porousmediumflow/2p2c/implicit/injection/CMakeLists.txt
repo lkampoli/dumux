@@ -8,16 +8,16 @@ dumux_add_test(NAME test_2p2c_injection_box
               CMD_ARGS --script fuzzy
                        --files ${CMAKE_SOURCE_DIR}/test/references/test_2p2c_injection_box-reference.vtu
                                ${CMAKE_CURRENT_BINARY_DIR}/test_2p2c_injection_box-00008.vtu
-                       --command "${CMAKE_CURRENT_BINARY_DIR}/test_2p2c_injection_box params.input -Problem.Name test_2p2c_injection_box")
+                       --command "${CMAKE_CURRENT_BINARY_DIR}/test_2p2c_injection_box params.input -Problem.Name test_2p2c_injection_box -Vtk.Precision Float64")
 
 dumux_add_test(NAME test_2p2c_injection_box_restart
               TARGET test_2p2c_injection_box
-              LABELS porousmediumflow 2p2c
+              LABELS porousmediumflow 2p2c restart
               COMMAND ${CMAKE_SOURCE_DIR}/bin/testing/runtest.py
               CMD_ARGS --script fuzzy
                        --files ${CMAKE_SOURCE_DIR}/test/references/test_2p2c_injection_box-reference.vtu
                                ${CMAKE_CURRENT_BINARY_DIR}/test_2p2c_injection_box_restart-00004.vtu
-                       --command "${CMAKE_CURRENT_BINARY_DIR}/test_2p2c_injection_box params.input -Problem.Name test_2p2c_injection_box_restart -TimeLoop.DtInitial 1488.5 -Restart.Time 2158.85 -Restart.File test_2p2c_injection_box-00004.vtu")
+                       --command "${CMAKE_CURRENT_BINARY_DIR}/test_2p2c_injection_box params.input -Problem.Name test_2p2c_injection_box_restart -TimeLoop.DtInitial 1488.5 -Restart.Time 2158.85 -Restart.File test_2p2c_injection_box-00004.vtu -Vtk.Precision Float64")
 
 # the restart test has to run after the test that produces the corresponding vtu file
 set_tests_properties(test_2p2c_injection_box_restart PROPERTIES DEPENDS test_2p2c_injection_box)

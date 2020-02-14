@@ -22,17 +22,17 @@ dumux_add_test(NAME test_1pni_convection_box
               CMD_ARGS --script fuzzy
                        --files ${CMAKE_SOURCE_DIR}/test/references/test_1pni_convection_box-reference.vtp
                                ${CMAKE_CURRENT_BINARY_DIR}/test_1pni_convection_box-00009.vtp
-                       --command "${CMAKE_CURRENT_BINARY_DIR}/test_1pni_convection_box params_convection.input -Problem.Name test_1pni_convection_box"
+                       --command "${CMAKE_CURRENT_BINARY_DIR}/test_1pni_convection_box params_convection.input -Problem.Name test_1pni_convection_box -Vtk.Precision Float64"
                        --zeroThreshold {"velocity":1e-15})
 
 dumux_add_test(NAME test_1pni_convection_box_restart
               TARGET test_1pni_convection_box
-              LABELS porousmediumflow 1p  1pni
+              LABELS porousmediumflow 1p  1pni restart
               COMMAND ${CMAKE_SOURCE_DIR}/bin/testing/runtest.py
               CMD_ARGS --script fuzzy
                        --files ${CMAKE_SOURCE_DIR}/test/references/test_1pni_convection_box-reference.vtp
                                ${CMAKE_CURRENT_BINARY_DIR}/test_1pni_convection_box_restart-00004.vtp
-                       --command "${CMAKE_CURRENT_BINARY_DIR}/test_1pni_convection_box params_convection.input -Problem.Name test_1pni_convection_box_restart -TimeLoop.DtInitial 1000 -Restart.Time 16768 -Restart.File test_1pni_convection_box-00006.vtp"
+                       --command "${CMAKE_CURRENT_BINARY_DIR}/test_1pni_convection_box params_convection.input -Problem.Name test_1pni_convection_box_restart -TimeLoop.DtInitial 1000 -Restart.Time 16768 -Restart.File test_1pni_convection_box-00006.vtp -Vtk.Precision Float64"
                        --zeroThreshold {"velocity":1e-15})
 
 # the restart test has to run after the test that produces the corresponding vtu file
