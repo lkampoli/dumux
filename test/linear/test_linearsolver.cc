@@ -7,7 +7,7 @@
 #include <dumux/common/parameters.hh>
 #include <dumux/discretization/method.hh>
 #include <dumux/linear/linearsolvertraits.hh>
-//#include <dumux/linear/istlsolverfactorybackend.hh>
+#include <dumux/linear/istlsolverfactorybackend.hh>
 #include <dumux/linear/amgbackend.hh>
 
 #include <dune/common/exceptions.hh>
@@ -33,6 +33,20 @@ struct MockGridGeometry
     static constexpr auto discMethod = DiscretizationMethod::box;
 };
 
+template<class M, class X, class V>
+void solveWithFactory(M& A, X& x, V& b, const std::string& paramGroup)
+{
+    std::cout << std::endl;
+
+    using LinearSolver = IstlSolverFactoryBackend<LinearSolverTraits<Test::MockGridGeometry>>;
+    LinearSolver solver(paramGroup);
+
+    std::cout << "Solving Laplace problem with " << solver.name() << "\n";
+    solver.solve(A, x, b);
+    if (!solver.result().converged)
+        DUNE_THROW(Dune::Exception, solver.name() << " did not converge!");
+}
+
 } // end namespace Dumux::Test
 
 int main(int argc, char* argv[]) try
@@ -53,15 +67,23 @@ int main(int argc, char* argv[]) try
     Vector x(A.N()); Vector b(A.M());
     x = 0; b = 1;
 
-    using LinearSolverTraits = Dumux::LinearSolverTraits<Test::MockGridGeometry>;
-    using LinearSolver = AMGBiCGSTABBackend<LinearSolverTraits>;
+    // AMGBiCGSTABBackend
+    {
+        std::cout << std::endl;
 
-    const auto testSolverName = getParam<std::string>("TestSolver");
-    LinearSolver solver(testSolverName);
+        const auto testSolverName = "AMGBiCGSTAB";
+        using LinearSolver = AMGBiCGSTABBackend<LinearSolverTraits<Test::MockGridGeometry>>;
+        LinearSolver solver(testSolverName);
 
-    solver.solve(A, x, b);
-    if (!solver.result().converged)
-      DUNE_THROW(Dune::Exception, testSolverName << " did not converge!");
+        std::cout << "Solving Laplace problem with " << solver.name() << "\n";
+        solver.solve(A, x, b);
+        if (!solver.result().converged)
+            DUNE_THROW(Dune::Exception, testSolverName << " did not converge!");
+    }
+
+    // IstlSolverFactoryBackend
+    Test::solveWithFactory(A, x, b, "AMGCG");
+    Test::solveWithFactory(A, x, b, "SSORCG");
 
     return 0;
 }
