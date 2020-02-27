@@ -41,6 +41,7 @@
 
 #if DUNE_VERSION_NEWER_REV(DUNE_ISTL,2,7,1)
 #include <dumux/linear/istlsolverfactorybackend.hh>
+#include <dumux/linear/linearsolvertraits.hh>
 #else
 #include <dumux/linear/amgbackend.hh>
 #endif
@@ -149,9 +150,7 @@ int main(int argc, char** argv) try
 
     // the linear solver
 #if DUNE_VERSION_NEWER_REV(DUNE_ISTL,2,7,1)
-    using Matrix = GetPropType<TypeTag, Properties::JacobianMatrix>;
-    using Vector = Dune::BlockVector<Dune::FieldVector<typename SolutionVector::block_type::value_type, SolutionVector::block_type::dimension>>;
-    using LinearSolver = IstlSolverFactoryBackend<Matrix, Vector, GridGeometry>;
+    using LinearSolver = IstlSolverFactoryBackend<LinearSolverTraits<GridGeometry>>;
 #else
     using LinearSolver = AMGBackend<TypeTag>;
 #endif
